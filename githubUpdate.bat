@@ -12,9 +12,9 @@ echo Running git commit with the provided name...
 
 git commit -m "%commitMessage%"
 
-echo Pushing to the 'main' branch...
+echo Pushing to the 'hscript' branch...
 
-git push origin main
+git push origin hscript
 
 echo Finished!
 
