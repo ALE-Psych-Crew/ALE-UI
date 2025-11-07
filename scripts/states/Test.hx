@@ -32,5 +32,11 @@ add(circleButton);
 var dropDownMenu:ALEDropDownMenu = new ALEDropDownMenu(100, 200, ['Que', 'Sería', 'Negro']);
 add(dropDownMenu);
 
-var inputText:ALEInputText = new ALEInputText(100, 250, null, null, 'Sexo');
+var inputText:ALEInputText = new ALEInputText(100, 250, ['Fabricio', 'Está Atrás', 'Atrás', 'De nuestra', 'Espalda'], null, null, 'Frase Épica');
 add(inputText);
+
+function onUpdate(elapsed:Float)
+{
+    if (Controls.RESET && !inputText.isTyping)
+        resetCustomState();
+}

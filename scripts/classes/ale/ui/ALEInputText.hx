@@ -1,22 +1,21 @@
 package ale.ui;
 
 import flixel.input.keyboard.FlxKey;
+import flixel.math.FlxRect;
+
+import lime.system.Clipboard;
+
+import openfl.ui.Mouse;
 
 import ale.ui.ALEMouseSpriteGroup;
 import ale.ui.ALEUIUtils;
 
-import openfl.ui.Mouse;
+using StringTools;
 
 typedef CheckPosition = {
 	result:Bool,
 	position:Int
 }
-
-/**
- * TODO:
- * - Fix Erase
- * - Optimize (?)
- */
 
 class ALEInputText extends ALEMouseSpriteGroup
 {
@@ -65,12 +64,34 @@ class ALEInputText extends ALEMouseSpriteGroup
 		return value;
 	}
 
-	public function new(?x:Float, ?y:Float, ?width:String, ?height:String, ?defValue:String)
+	public var toSearch(default, set):Array<String>;
+	function set_toSearch(val:Array<String>):Array<String>
+	{
+		toSearch = val;
+
+		updateSearch();
+
+		return toSearch;
+	}
+
+	public var searchDefault:String = '';
+	function set_searchDefault(val:String):String
+	{
+		searchDefault = val;
+
+		updateSearch();
+
+		return searchDefault;
+	}
+
+	private var searchResult:String = '';
+
+	public function new(?x:Float, ?y:Float, ?search:Array<String>, ?width:String, ?height:String, ?searchDef:String, ?defValue:String)
 	{
 		super(x, y);
 
 		theWidth = Math.floor(width ?? (ALEUIUtils.OBJECT_SIZE * 6));
-		theHeight = Math.floor(width ?? ALEUIUtils.OBJECT_SIZE);
+		theHeight = Math.floor(height ?? ALEUIUtils.OBJECT_SIZE);
 
 		labelX = theWidth / 36;
 
@@ -98,7 +119,13 @@ class ALEInputText extends ALEMouseSpriteGroup
 
 		curSelected = value.length;
 
-		isTyping = true;
+		isTyping = false;
+
+		toSearch = search;
+		
+		searchDefault = searchDef;
+
+		updateSearch();
 		
         FlxG.stage.addEventListener('keyDown', onKeyDown, false, 1);
 	}
@@ -152,8 +179,13 @@ class ALEInputText extends ALEMouseSpriteGroup
         if (!isTyping)
             return;
 
+		var punctReg:EReg = ~/[\.\,\;\:\¡\!\¿\?\\"'\(\)\[\]\{\}\-\—\…]/;
 		var alphaNumericReg:EReg = ~/[\w]/;
 		var spaceReg:EReg = ~/[\s]/;
+
+		var printReg:EReg = ~/[\x20-\x7E]/;
+
+		var regs:Array<EReg> = [punctReg, spaceReg, alphaNumericReg];
 
         final key:FlxKey = e.keyCode;
 
@@ -167,6 +199,14 @@ class ALEInputText extends ALEMouseSpriteGroup
 				isTyping = false;
 
             case FlxKey.TAB:
+				if (searchResult.length > 0)
+				{
+					value = searchResult;
+
+					curSelected = value.length;
+
+					updateSearch();
+				}
 
             case FlxKey.HOME:
 				curSelected = 0;
@@ -175,91 +215,62 @@ class ALEInputText extends ALEMouseSpriteGroup
 				curSelected = value.length;
 
             case FlxKey.LEFT:
-				var toChange:Int = 1;
-
-				if (e.ctrlKey)
-				{
-					if (spaceReg.match(value.charAt(curSelected - 1)))
-						while (curSelected - toChange >= 0 && spaceReg.match(value.charAt(curSelected - toChange)))
-							toChange++;
-
-					while (curSelected - toChange >= 0 && alphaNumericReg.match(value.charAt(curSelected - toChange)))
-						toChange++;
-
-					toChange--;
-				}
-
-				curSelected = Math.max(curSelected - toChange, 0);
+				curSelected = Math.max(curSelected - (e.ctrlKey ? typedCharacterRegex(true, regs) - 1 : 1), 0);
 
             case FlxKey.RIGHT:
-				var toChange:Int = 1;
-
-				if (e.ctrlKey)
-				{
-					if (spaceReg.match(value.charAt(curSelected + 1)))
-						while (curSelected + toChange >= 0 && spaceReg.match(value.charAt(curSelected + toChange)))
-							toChange++;
-
-					while (curSelected + toChange <= value.length && alphaNumericReg.match(value.charAt(curSelected + toChange)))
-						toChange++;
-				}
-
-				curSelected = Math.min(curSelected + toChange, value.length);
+				curSelected = Math.min(curSelected + (e.ctrlKey ? typedCharacterRegex(false, regs) : 1), value.length);
 
             case FlxKey.BACKSPACE:
-				var toChange:Int = 1;
-
-				if (e.ctrlKey)
-				{
-					var isSpace:Bool = spaceReg.match(value.charAt(curSelected - 1));
-
-					if (isSpace)
-						while (curSelected - toChange >= 0 && spaceReg.match(value.charAt(curSelected - toChange)))
-							toChange++;
-
-					if ((isSpace && !spaceReg.match(value.charAt(curSelected - 2))) || !isSpace)
-						while (curSelected - toChange >= 0 && alphaNumericReg.match(value.charAt(curSelected - toChange)))
-							toChange++;
-
-					toChange--;
-				}
+				var toChange:Int = e.ctrlKey ? typedCharacterRegex(true, regs) - 1 :  1;
 
 				value = value.substring(0, curSelected - toChange) + value.substring(curSelected);
 
 				curSelected = Math.max(curSelected - toChange, 0);
 
+				updateSearch();
+
             case FlxKey.DELETE:
-				var toChange:Int = 1;
+				value = value.substring(0, curSelected) + value.substring(curSelected + (e.ctrlKey ? typedCharacterRegex(false, regs) : 1));
 
-				if (e.ctrlKey)
-				{
-					var isSpace:Bool = spaceReg.match(value.charAt(curSelected));
-
-					if (isSpace)
-						while (curSelected + toChange >= 0 && spaceReg.match(value.charAt(curSelected + toChange)))
-							toChange++;
-
-					if ((isSpace && !spaceReg.match(value.charAt(curSelected + 1))) || !isSpace)
-						while (curSelected + toChange <= value.length && alphaNumericReg.match(value.charAt(curSelected + toChange)))
-							toChange++;
-				}
-
-				value = value.substring(0, curSelected) + value.substring(curSelected + toChange);
+				updateSearch();
 
             case FlxKey.SPACE:
 				toAdd = ' ';
 
             default:
-				toAdd = CoolUtil.fromCharCode(e.charCode);
+				if (e.ctrlKey && key == FlxKey.C)
+					Clipboard.text = value;
+				else if (e.ctrlKey && key == FlxKey.V)
+					toAdd = Clipboard.text;
+				else
+					toAdd = CoolUtil.fromCharCode(e.charCode);
         }
 
-		if (toAdd != null)
+		if (toAdd != null && printReg.match(toAdd))
 		{
 			value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
 
-			curSelected = curSelected + 1;
+			curSelected = curSelected + toAdd.length;
+
+			updateSearch();
 		}
     }
+
+	function updateSearch()
+	{
+		searchResult = '';
+
+		if (toSearch != null && value.length > 0)
+			for (sch in toSearch)
+				if (sch.toLowerCase().startsWith(value.toLowerCase()))
+				{
+					searchResult = sch;
+
+					break;
+				}
+
+		searchLabel.text = value.length <= 0 ? searchDefault : searchResult;
+	}
 
 	function updateCursorPos()
 	{
@@ -270,5 +281,36 @@ class ALEInputText extends ALEMouseSpriteGroup
 		var bounds = label.textField.getCharBoundaries(curSelected - 1);
 
 		cursor.x = this.x + labelX + (bounds == null ? 0 : bounds.x + bounds.width) - 1;
+
+		var overflow:Float = Math.min(this.x + bg.width - labelX - cursor.width - cursor.x, 0);
+
+		label.x = searchLabel.x = this.x + labelX + overflow;
+		
+		cursor.x += overflow;
+
+		label.clipRect = FlxRect.get(-overflow, 0, bg.width - labelX * 2, label.frameHeight);
+		searchLabel.clipRect = FlxRect.get(-overflow, 0, bg.width - labelX * 2, searchLabel.frameHeight);
+	}
+	
+	function typedCharacterRegex(back:Bool, regs:Array<EReg>):Int
+	{
+		var total:Int = 1;
+
+		var curReg:EReg = null;
+
+		for (reg in regs)
+		{
+			if (reg.match(value.charAt(curSelected - (back ? 1 : 0))))
+			{
+				curReg = reg;
+
+				break;
+			}
+		}
+
+		while (curReg != null && curSelected + total * (back ? - 1 : 1) == FlxMath.bound(curSelected + total * (back ? - 1 : 1), 0, value.length) && curReg.match(value.charAt(curSelected + total * (back ? -1 : 1))))
+			total++;
+
+		return total;
 	}
 }
