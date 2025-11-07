@@ -1,6 +1,8 @@
 import ale.ui.ALEButton;
-import ale.ui.ALEButton;
+import ale.ui.ALECircleButton;
 import ale.ui.ALEUIUtils;
+import ale.ui.ALEDropDownMenu;
+import ale.ui.ALEInputText;
 
 import lime.app.Application;
 
@@ -18,8 +20,17 @@ var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('ui/menuBG'));
 add(bg);
 bg.alpha = 0.125;
 
-var button:ALEButton = new ALEButton(100, 100);
+var button:ALEButton = new ALEButton(100, 100, 'Siempre');
 add(button);
 button.releaseCallback = () -> {
-    trace('ALEButton');
+    game.camGame.shake(0.0025);
 };
+
+var circleButton:ALECircleButton = new ALECircleButton(100, 150, 'Creí', 30, false);
+add(circleButton);
+
+var dropDownMenu:ALEDropDownMenu = new ALEDropDownMenu(100, 200, ['Que', 'Sería', 'Negro']);
+add(dropDownMenu);
+
+var inputText:ALEInputText = new ALEInputText(100, 250, null, null, 'Sexo');
+add(inputText);

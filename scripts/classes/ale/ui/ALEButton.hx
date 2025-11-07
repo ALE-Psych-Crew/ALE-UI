@@ -1,8 +1,9 @@
 package ale.ui;
 
 import ale.ui.ALEMouseSpriteGroup;
-
 import ale.ui.ALEUIUtils;
+
+import openfl.ui.Mouse;
 
 class ALEButton extends ALEMouseSpriteGroup
 {
@@ -10,19 +11,21 @@ class ALEButton extends ALEMouseSpriteGroup
 	public var label:FlxText;
 	public var mask:FlxSprite;
 
-	public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float, ?label:String)
+	public var changeCursorSkin:Bool = true;
+
+	public function new(?x:Float, ?y:Float, ?lab:String, ?w:Float, ?h:Float, ?shadowed:Bool)
 	{
 		super(x, y);
 
-		var intW:Int = Math.floor(w ?? ALEUIUtils.BUTTON_WIDTH);
-		var intH:Int = Math.floor(h ?? ALEUIUtils.BUTTON_HEIGHT);
+		var intW:Int = Math.floor(w ?? (ALEUIUtils.OBJECT_SIZE * 5));
+		var intH:Int = Math.floor(h ?? ALEUIUtils.OBJECT_SIZE);
 
 		bg = new FlxSprite();
-		bg.pixels = ALEUIUtils.uiBitmap(intW, intH);
+		bg.pixels = ALEUIUtils.uiBitmap(intW, intH, shadowed);
 		bg.updateHitbox();
 		add(bg);
 
-		label = new FlxText(0, 0, 0, label ?? 'Button', Math.floor(Math.min(intW, intH) / 1.5));
+		label = new FlxText(0, 0, 0, lab ?? 'Button', Math.floor(Math.min(intW, intH) / 1.5));
 		add(label);
 		label.font = ALEUIUtils.FONT;
 		label.alignment = 'center';
@@ -37,6 +40,9 @@ class ALEButton extends ALEMouseSpriteGroup
 	override function overlapCallbackHandler(isOver:Bool)
 	{
 		mask.alpha = isOver || pressed ? 0.25 : 0;
+
+		if (changeCursorSkin)
+			Mouse.cursor = isOver ? 'button' : 'arrow';
 
 		super.overlapCallbackHandler(isOver);
 	}

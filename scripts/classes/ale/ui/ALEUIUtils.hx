@@ -6,9 +6,8 @@ import openfl.geom.Rectangle;
 import flixel.util.FlxColor;
 
 class ALEUIUtils
-{   
-    public static final BUTTON_WIDTH:Int = 150;
-    public static final BUTTON_HEIGHT:Int = 30;
+{
+    public static final OBJECT_SIZE:Int = 30;
 
     public static var FONT:String = Paths.font('vcr.ttf');
 
@@ -63,5 +62,15 @@ class ALEUIUtils
         bitmap.fillRect(rect, OUTLINE_COLOR);
 
         return bitmap;
+    }
+
+	public static function fpsLerp(v1:Float, v2:Float, ratio:Float):Float
+	{
+		return FlxMath.lerp(v1, v2, fpsRatio(ratio));
+    }
+
+	public static function fpsRatio(ratio:Float)
+	{
+		return FlxMath.bound(ratio * FlxG.elapsed * 60, 0, 1);
     }
 }
