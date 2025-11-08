@@ -42,6 +42,8 @@ class ALEInputText extends ALEMouseSpriteGroup
 		return curSelected;
 	}
 
+	public var focusCallback:Bool -> Void;
+
 	public var isTyping(default, set):Bool;
 	function set_isTyping(val:Bool):Bool
 	{
@@ -50,6 +52,9 @@ class ALEInputText extends ALEMouseSpriteGroup
 		cursor.visible = isTyping;
 
 		cursorTimer = 0;
+
+		if (focusCallback != null)
+			focusCallback(isTyping);
 
 		return isTyping;
 	}
@@ -60,6 +65,8 @@ class ALEInputText extends ALEMouseSpriteGroup
 		value = val;
 
 		label.text = value;
+
+		updateSearch();
 
 		return value;
 	}
@@ -84,7 +91,7 @@ class ALEInputText extends ALEMouseSpriteGroup
 		return searchDefault;
 	}
 
-	private var searchResult:String = '';
+	public var searchResult:String = '';
 
 	public function new(?x:Float, ?y:Float, ?search:Array<String>, ?width:String, ?height:String, ?searchDef:String, ?defValue:String)
 	{
@@ -118,8 +125,6 @@ class ALEInputText extends ALEMouseSpriteGroup
 		value = defValue ?? '';
 
 		curSelected = value.length;
-
-		isTyping = false;
 
 		toSearch = search;
 		
@@ -204,8 +209,6 @@ class ALEInputText extends ALEMouseSpriteGroup
 					value = searchResult;
 
 					curSelected = value.length;
-
-					updateSearch();
 				}
 
             case FlxKey.HOME:
@@ -227,12 +230,8 @@ class ALEInputText extends ALEMouseSpriteGroup
 
 				curSelected = Math.max(curSelected - toChange, 0);
 
-				updateSearch();
-
             case FlxKey.DELETE:
 				value = value.substring(0, curSelected) + value.substring(curSelected + (e.ctrlKey ? typedCharacterRegex(false, regs) : 1));
-
-				updateSearch();
 
             case FlxKey.SPACE:
 				toAdd = ' ';
@@ -251,8 +250,6 @@ class ALEInputText extends ALEMouseSpriteGroup
 			value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
 
 			curSelected = curSelected + toAdd.length;
-
-			updateSearch();
 		}
     }
 
@@ -269,12 +266,12 @@ class ALEInputText extends ALEMouseSpriteGroup
 					break;
 				}
 
-		searchLabel.text = value.length <= 0 ? searchDefault : searchResult;
+		searchLabel.text = value.length <= 0 ? (searchDefault ?? '') : searchResult;
 	}
 
 	function updateCursorPos()
 	{
-		cursor.visible = true;
+		cursor.visible = isTyping;
 
 		cursorTimer = 0;
 

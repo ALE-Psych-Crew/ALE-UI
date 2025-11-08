@@ -1,8 +1,8 @@
 import ale.ui.ALEButton;
 import ale.ui.ALECircleButton;
 import ale.ui.ALEUIUtils;
-import ale.ui.ALEDropDownMenu;
 import ale.ui.ALEInputText;
+import ale.ui.ALEDropDownMenu;
 
 import lime.app.Application;
 
@@ -29,11 +29,12 @@ button.releaseCallback = () -> {
 var circleButton:ALECircleButton = new ALECircleButton(100, 150, 'Creí', 30, false);
 add(circleButton);
 
-var dropDownMenu:ALEDropDownMenu = new ALEDropDownMenu(100, 200, ['Que', 'Sería', 'Negro']);
-add(dropDownMenu);
-
-var inputText:ALEInputText = new ALEInputText(100, 250, ['Fabricio', 'Está Atrás', 'Atrás', 'De nuestra', 'Espalda'], null, null, 'Frase Épica');
+var inputText:ALEInputText = new ALEInputText(100, 200, ['Fabricio', 'Está Atrás', 'Atrás', 'De nuestra', 'Espalda'], null, null, 'Frase Épica');
 add(inputText);
+
+var dropDownMenu:ALEDropDownMenu = new ALEDropDownMenu(100, 250, ['Que', 'Sería', 'Negro']);
+add(dropDownMenu);
+dropDownMenu.options = ['oso', 'donde', 'tu', 'ta', 'oso'];
 
 function onUpdate(elapsed:Float)
 {

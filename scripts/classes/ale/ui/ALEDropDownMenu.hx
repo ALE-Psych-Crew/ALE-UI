@@ -1,10 +1,11 @@
 package ale.ui;
 
+import ale.ui.ALEUIUtils;
+
 import ale.ui.ALEButton;
+import ale.ui.ALEInputText;
 
 import scripting.haxe.ScriptSpriteGroup;
-
-import ale.ui.ALEUIUtils;
 
 //import flixel.group.FlxSpriteGroup;
 import flixel.group.FlxTypedSpriteGroup as FlxSpriteGroup;
@@ -46,6 +47,25 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 		return open;
 	}
 
+	public var options(default, set):Array<String>;
+	function set_options(val:Array<String>):Array<String>
+	{
+		options = val;
+
+		if (bg != null)
+		{
+			bg.value = getFirstOption();
+			bg.toSearch = options;
+		}
+
+		buttons.clear();
+
+		for (opt in options)
+			addOption(opt);
+
+		return options;
+	}
+
 	public function new(?x:Float, ?y:Float, ?opts:Array<String>, ?w:Float, ?h:Float)
 	{
 		super(x, y);
@@ -53,35 +73,37 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 		theWidth = w ?? ALEUIUtils.OBJECT_SIZE * 5;
 		theHeight = h ?? ALEUIUtils.OBJECT_SIZE;
 
-		bg = new FlxSprite();
-		bg.pixels = ALEUIUtils.uiBitmap(theWidth, theHeight, false, -25);
-		add(bg);
-
 		openButton = new ALEButton(theWidth, 0, '+', theHeight, theHeight);
-		add(openButton);
+		openButton.changeCursorSkin = false;
 		openButton.releaseCallback = () -> {
 			open = !open;
 		};
 
 		buttons = new FlxSpriteGroup<ALEButton>();
-		add(buttons);
-		buttons.y = this.y + theHeight;
+		buttons.y = theHeight;
 
-		for (index => opt in opts)
-		{
-			var but:ALEButton = new ALEButton(0, 0, opt, theWidth, theHeight);
-			but.y = theHeight * index;
-			but.changeCursorSkin = false;
-			but.releaseCallback = () -> {
-				value = opt;
-
-				open = false;
-			};
-
-			buttons.add(but);
-		}
+		options = opts;
 
 		open = false;
+
+		bg = new ALEInputText(0, 0, opts, theWidth, theHeight);
+		bg.value = getFirstOption();
+		bg.curSelected = bg.value.length;
+		bg.focusCallback = (isFocused) -> {
+			if (!isFocused && !opts.contains(bg.value))
+			{
+				if (bg.searchResult != null && bg.searchResult.length > 0)
+					bg.value = bg.searchResult;
+				else
+					bg.value = getFirstOption();
+
+				bg.curSelected = bg.value.length;
+			}
+		};
+		
+		add(bg);
+		add(openButton);
+		add(buttons);
 	}
 
 	override function update(elapsed:Float)
@@ -104,5 +126,55 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 		}
 
 		super.update(elapsed);
+	}
+
+	public function addOption(option:String)
+	{
+		var but:ALEButton = new ALEButton(0, 0, option, theWidth, theHeight);
+		but.y = theHeight * buttons.members.length;
+		but.changeCursorSkin = false;
+		but.releaseCallback = () -> {
+			value = option;
+
+			bg.value = value;
+			bg.curSelected = bg.value.length;
+
+			open = false;
+		};
+
+		buttons.add(but);
+	}
+
+	public function removeOption(option:String)
+	{
+		if (!options.contains(option))
+			return;
+
+		options.remove(option);
+
+		bg.toSearch.remove(option);
+
+		var yIndex:Int = 0;
+
+		for (but in buttons)
+		{
+			if (but.label.text == option)
+			{
+				buttons.remove(but, true);
+
+				shouldOrder = true;
+
+				continue;
+			}
+
+			but.y = buttons.y + yIndex * theHeight;
+
+			yIndex++;
+		}
+	}
+
+	function getFirstOption():String
+	{
+		return options[0];
 	}
 }
