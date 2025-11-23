@@ -50,7 +50,16 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 	public var options(default, set):Array<String>;
 	function set_options(val:Array<String>):Array<String>
 	{
-		options = val;
+		var noRep:Array<String> = [];
+
+		for (obj in val)
+			if (!noRep.contains(obj))
+				noRep.push(obj);
+
+		if (options == noRep)
+			return noRep;
+
+		options = noRep;
 
 		if (bg != null)
 		{
