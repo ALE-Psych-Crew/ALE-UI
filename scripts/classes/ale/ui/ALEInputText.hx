@@ -93,6 +93,8 @@ class ALEInputText extends ALEMouseSpriteGroup
 
 	public var searchResult:String = '';
 
+	public var filter:EReg;
+
 	public function new(?x:Float, ?y:Float, ?search:Array<String>, ?width:String, ?height:String, ?searchDef:String, ?defValue:String)
 	{
 		super(x, y);
@@ -247,6 +249,10 @@ class ALEInputText extends ALEMouseSpriteGroup
 
 		if (toAdd != null && printReg.match(toAdd))
 		{
+			if (filter != null)
+				if (!filter.match(toAdd))
+					return;
+
 			value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
 
 			curSelected = curSelected + toAdd.length;

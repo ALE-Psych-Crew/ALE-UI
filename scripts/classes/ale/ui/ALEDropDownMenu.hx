@@ -14,7 +14,7 @@ import flixel.math.FlxRect;
 
 class ALEDropDownMenu extends ScriptSpriteGroup
 {
-	public var bg:ALEButton;
+	public var bg:ALEInputText;
 
 	public var openButton:ALEButton;
 
@@ -88,7 +88,7 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 			open = !open;
 		};
 
-		buttons = new FlxSpriteGroup<ALEButton>();
+		buttons = new FlxSpriteGroup();
 		buttons.y = theHeight;
 
 		options = opts;

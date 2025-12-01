@@ -13,7 +13,7 @@ class ALEButton extends ALEMouseSpriteGroup
 
 	public var changeCursorSkin:Bool = true;
 
-	public function new(?x:Float, ?y:Float, ?lab:String, ?w:Float, ?h:Float, ?shadowed:Bool)
+	public function new(?x:Float, ?y:Float, ?lab:String, ?w:Float, ?h:Float, ?shadowed:Bool, ?allowMask:Bool)
 	{
 		super(x, y);
 
@@ -32,14 +32,18 @@ class ALEButton extends ALEMouseSpriteGroup
 		label.x = bg.x + bg.width / 2 - label.width / 2;
 		label.y = bg.y + bg.height / 2 - label.height / 2;
 
-		mask = new FlxSprite().makeGraphic(intW, intH, FlxColor.WHITE);
-		add(mask);
-		mask.alpha = 0;
+		if (allowMask ?? true)
+		{
+			mask = new FlxSprite().makeGraphic(intW, intH, FlxColor.WHITE);
+			add(mask);
+			mask.alpha = 0;
+		}
 	}
 
 	override function overlapCallbackHandler(isOver:Bool)
 	{
-		mask.alpha = isOver || pressed ? 0.25 : 0;
+		if (mask != null)
+			mask.alpha = isOver || pressed ? 0.25 : 0;
 
 		if (changeCursorSkin)
 			Mouse.cursor = isOver ? 'button' : 'arrow';
@@ -49,9 +53,11 @@ class ALEButton extends ALEMouseSpriteGroup
 
 	override function pressCallbackHandler(isPressed:Bool)
 	{
-		mask.color = isPressed ? FlxColor.BLACK : FlxColor.WHITE;
-
-		mask.alpha = isPressed || overlaped ? 0.25 : 0;
+		if (mask != null)
+		{
+			mask.color = isPressed ? FlxColor.BLACK : FlxColor.WHITE;
+			mask.alpha = isPressed || overlaped ? 0.25 : 0;
+		}
 
 		super.pressCallbackHandler(isPressed);
 	}
