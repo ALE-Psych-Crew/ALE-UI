@@ -7,9 +7,9 @@ import flixel.util.FlxColor;
 
 class ALEUIUtils
 {
-    public static final OBJECT_SIZE:Int = 30;
+    public static final OBJECT_SIZE:Int = 25;
 
-    public static var FONT:String = Paths.font('vcr.ttf');
+    public static var FONT:String = Paths.font('jetbrains.ttf');
 
     public static var COLOR:FlxColor = FlxColor.fromRGB(50, 70, 100);
     public static var OUTLINE_COLOR:FlxColor = FlxColor.WHITE;

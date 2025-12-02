@@ -22,27 +22,27 @@ var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('ui/menuBG'));
 add(bg);
 bg.alpha = 0.125;
 
-var tab:ALETab = new ALETab(100, 350 + ALEUIUtils.OBJECT_SIZE);
+var tab:ALETab = new ALETab(50, 50 + ALEUIUtils.OBJECT_SIZE);
 add(tab);
 
-var button:ALEButton = new ALEButton(100, 100, 'Siempre');
-tab.content.add(button);
+var button:ALEButton = new ALEButton(30, 30, 'Siempre');
+tab.add(button);
 button.releaseCallback = () -> {
     game.camGame.shake(0.0025);
 };
 
-var circleButton:ALECircleButton = new ALECircleButton(100, 150, 'Creí', 30, false);
-tab.content.add(circleButton);
+var circleButton:ALECircleButton = new ALECircleButton(30, 80, 'Creí', null, false);
+tab.add(circleButton);
 
-var inputText:ALEInputText = new ALEInputText(100, 200, ['Fabricio', 'Está Atrás', 'Atrás', 'De nuestra', 'Espalda'], null, null, 'Frase Épica');
-tab.content.add(inputText);
+var inputText:ALEInputText = new ALEInputText(30, 130, ['Fabricio', 'Está Atrás', 'Atrás', 'De nuestra', 'Espalda'], null, null, 'Frase Épica');
+tab.add(inputText);
 
-var dropDownMenu:ALEDropDownMenu = new ALEDropDownMenu(100, 250, ['Que', 'Sería', 'Negro']);
-tab.content.add(dropDownMenu);
+var dropDownMenu:ALEDropDownMenu = new ALEDropDownMenu(30, 180, ['Que', 'Sería', 'Negro']);
+tab.add(dropDownMenu);
 dropDownMenu.options = ['oso', 'donde', 'tu', 'ta', 'oso'];
 
-var numericStepper:ALENumericStepper = new ALENumericStepper(100, 300);
-tab.content.add(numericStepper);
+var numericStepper:ALENumericStepper = new ALENumericStepper(30, 230);
+tab.add(numericStepper);
 
 function onUpdate(elapsed:Float)
 {
