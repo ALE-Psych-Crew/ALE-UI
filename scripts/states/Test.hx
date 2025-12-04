@@ -12,7 +12,7 @@ import lime.app.Application;
 
 WindowsAPI.setWindowBorderColor(33, 33, 33);
 
-if (true)
+if (false)
 {
     Application.current.window.width = (1920 / 2) * 0.9;
     Application.current.window.height = (1080 / 2) * 0.9;
