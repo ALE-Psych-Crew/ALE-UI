@@ -9,6 +9,15 @@ import funkin.visuals.shaders.ALERuntimeShader;
 
 import flixel.util.FlxSpriteUtil;
 
+import ale.ui.UpdateColorType;
+
+enum UpdateColorType
+{
+	HUE;
+	HSB;
+	BOTH;
+}
+
 class ALEColorPicker extends ALEUISpriteGroup
 {
     var shaderHSB:String = '
@@ -71,7 +80,7 @@ class ALEColorPicker extends ALEUISpriteGroup
 	public var spriteHUE:ALEMouseSprite;
 	public var selHUE:ALEUISprite;
 
-	public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float)
+	public function new(?x:Float, ?y:Float, ?color:FlxColor, ?w:Float, ?h:Float)
 	{
 		super(x, y);
 
@@ -113,7 +122,45 @@ class ALEColorPicker extends ALEUISpriteGroup
 		add(selHUE);
 		selHUE.y = spriteHUE.y + spriteHUE.height / 2 - selHUE.height / 2;
 		selHUE.offset.x = selHUE.width / 2;
+
+		setColor(color ?? FlxColor.WHITE);
 	}
+
+	public var brightness:Float = 1;
+	public var saturation:Float = 1;
+	public var hue:Float = 0;
+
+	public var curColor(get, never):FlxColor;
+
+	function get_curColor(value:FlxColor):FlxColor
+	{
+		return FlxColor.fromHSB(hue, saturation, brightness);
+	}
+
+	var last:FlxColor;
+
+	function setColor(value:FlxColor):FlxColor
+	{
+		var hsb = rgbToHSB(value >> 16 & 0xFF, value >> 8 & 0xFF, value & 0xFF);
+
+		hue = hsb.h;
+		brightness = hsb.b;
+		saturation = hsb.s;
+
+		selHUE.x = spriteHUE.x + hue / 360 * spriteHUE.width;
+
+		selHSB.x = spriteHSB.x + saturation * spriteHSB.width;
+		selHSB.y = spriteHSB.y + spriteHSB.height - (brightness * spriteHSB.height);
+
+		updateColor(UpdateColorType.HSB);
+		updateColor(UpdateColorType.HUE);
+
+		last = curColor;
+
+		return curColor;
+	}
+
+	public var onChange:Void -> Void;
 
 	override function uiUpdate(elapsed:Float)
 	{
@@ -127,12 +174,92 @@ class ALEColorPicker extends ALEUISpriteGroup
 			{
 				selHSB.x = FlxMath.bound(mousePos.x, spriteHSB.x, spriteHSB.x + spriteHSB.width);
 				selHSB.y = FlxMath.bound(mousePos.y, spriteHSB.y, spriteHSB.y + spriteHSB.height);
+
+				updateColor(UpdateColorType.HSB);
 			}
 
 			if (selectingHUE)
 			{
-				selHUE.x = FlxMath.bound(mousePos.x, spriteHSB.x, spriteHUE.x + spriteHUE.width);
+				selHUE.x = FlxMath.bound(mousePos.x, spriteHUE.x, spriteHUE.x + spriteHUE.width);
+
+				updateColor(UpdateColorType.HUE);
+			}
+
+			if (last != curColor)
+			{
+				if (onChange != null)
+					onChange();
+
+				last = curColor;
 			}
 		}
 	}
+
+	var lastColor:FlxColor = null;
+
+	function updateColor(type:UpdateColorType)
+	{
+		switch (type)
+		{
+			case UpdateColorType.HSB:
+				saturation = (selHSB.x - spriteHSB.x) / spriteHSB.width;
+				brightness = 1 - (selHSB.y - spriteHSB.y) / spriteHSB.height;
+			case UpdateColorType.HUE:
+				hue = (selHUE.x - spriteHUE.x) / spriteHUE.width * 360;
+					
+				cast(spriteHSB.shader, ALERuntimeShader).setFloat('hue', hue);
+							
+				setColorOffset(selHUE, FlxColor.fromHSB(hue, 1, 1));
+		}
+
+		if (lastColor != curColor)
+		{
+			setColorOffset(selHSB, curColor);
+
+			lastColor = curColor;
+		}
+	}
+
+    function setColorOffset(spr:FlxSprite, color:FlxColor)
+    {
+        spr.colorTransform.redOffset = color >> 16 & 0xFF;
+        spr.colorTransform.greenOffset = color >> 8 & 0xFF;
+        spr.colorTransform.blueOffset = color & 0xFF;
+    }
+
+    function rgbToHSB(r:Int, g:Int, b:Int):{h:Float, s:Float, b:Float}
+    {
+        var rf:Float = r / 255;
+        var gf:Float = g / 255;
+        var bf:Float = b / 255;
+
+        var max:Float = Math.max(rf, Math.max(gf, bf));
+
+        var delta:Float = max - Math.min(rf, Math.min(gf, bf));
+
+        var h:Float = 0;
+        var s:Float = max == 0 ? 0 : delta / max;
+        var b:Float = max;
+
+        if (delta != 0)
+        {
+            if (max == rf)
+                h = (gf - bf) / delta % 6;
+            else if (max == gf)
+                h = (bf - rf) / delta + 2;
+            else
+                h = (rf - gf) / delta + 4;
+
+            h *= 60;
+
+            if (h < 0)
+                h += 360;
+        }
+
+        return {
+            h: h,
+            s: s,
+            b: b
+        };
+    }
 }

@@ -12,7 +12,7 @@ import lime.app.Application;
 
 WindowsAPI.setWindowBorderColor(33, 33, 33);
 
-if (false)
+if (true)
 {
     Application.current.window.width = (1920 / 2) * 0.9;
     Application.current.window.height = (1080 / 2) * 0.9;
@@ -50,8 +50,11 @@ dropDownMenu.options = ['oso', 'donde', 'tu', 'ta', 'oso'];
 var numericStepper:ALENumericStepper = new ALENumericStepper(30, 230);
 tab.addObj('Group 2', numericStepper);
 
-var colorPicker:ALEColorPicker = new ALEColorPicker(30, 200);
+var colorPicker:ALEColorPicker = new ALEColorPicker(30, 200, FlxColor.CYAN);
 tab.addObj('Group 1', colorPicker);
+colorPicker.onChange = () -> {
+    debugTrace('oso');
+};
 
 function onUpdate(elapsed:Float)
 {
