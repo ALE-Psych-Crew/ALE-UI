@@ -6,12 +6,13 @@ import ale.ui.ALEDropDownMenu;
 import ale.ui.ALENumericStepper;
 import ale.ui.ALETab;
 import ale.ui.ALEMultiTab;
+import ale.ui.ALEColorPicker;
 
 import lime.app.Application;
 
 WindowsAPI.setWindowBorderColor(33, 33, 33);
 
-if (true)
+if (false)
 {
     Application.current.window.width = (1920 / 2) * 0.9;
     Application.current.window.height = (1080 / 2) * 0.9;
@@ -47,8 +48,10 @@ tab.addObj('Group 2', dropDownMenu);
 dropDownMenu.options = ['oso', 'donde', 'tu', 'ta', 'oso'];
 
 var numericStepper:ALENumericStepper = new ALENumericStepper(30, 230);
-//tab.addObj('Group 2', numericStepper);
-add(numericStepper);
+tab.addObj('Group 2', numericStepper);
+
+var colorPicker:ALEColorPicker = new ALEColorPicker(30, 200);
+tab.addObj('Group 1', colorPicker);
 
 function onUpdate(elapsed:Float)
 {
