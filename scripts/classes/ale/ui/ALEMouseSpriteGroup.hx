@@ -1,8 +1,8 @@
 package ale.ui;
 
-import scripting.haxe.ScriptSpriteGroup;
+import ale.ui.ALEUISpriteGroup;
 
-class ALEMouseSpriteGroup extends ScriptSpriteGroup
+class ALEMouseSpriteGroup extends ALEUISpriteGroup
 {
 	public var overlaped:Bool = false;
 
@@ -15,8 +15,10 @@ class ALEMouseSpriteGroup extends ScriptSpriteGroup
 	public var pressCallback:Void -> Void;
 	public var releaseCallback:Void -> Void;
 
-	override function update(elapsed:Float)
+	override function uiUpdate(elapsed:Float)
 	{
+		super.uiUpdate(elapsed);
+
 		var newOverlaped:Bool = FlxG.mouse.overlaps(super, cameras[0]);
 
 		if (newOverlaped != overlaped)
@@ -30,8 +32,6 @@ class ALEMouseSpriteGroup extends ScriptSpriteGroup
             pressCallbackHandler(newPressed);
 
 		pressed = newPressed;
-
-		super.update(elapsed);
 	}
 
     public function overlapCallbackHandler(isOver:Bool)

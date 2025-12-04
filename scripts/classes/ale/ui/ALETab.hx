@@ -1,18 +1,12 @@
 package ale.ui;
 
 import ale.ui.ALEUIUtils;
-
 import ale.ui.ALEButton;
-
-import scripting.haxe.ScriptSpriteGroup;
+import ale.ui.ALEUISpriteGroup;
 
 import flixel.math.FlxPoint;
-import flixel.math.FlxRect;
 
-//import flixel.group.FlxSpriteGroup;
-import flixel.group.FlxTypedSpriteGroup as FlxSpriteGroup;
-
-class ALETab extends ScriptSpriteGroup
+class ALETab extends ALEUISpriteGroup
 {
     public var border:ALEButton;
 
@@ -81,9 +75,9 @@ class ALETab extends ScriptSpriteGroup
         draggable = isDraggable ?? true;
     }
 
-    override public function update(elapsed:Float)
+    override function uiUpdate(elapsed:Float)
     {
-        super.update(elapsed);
+        super.uiUpdate(elapsed);
 
         if (dragging)
         {

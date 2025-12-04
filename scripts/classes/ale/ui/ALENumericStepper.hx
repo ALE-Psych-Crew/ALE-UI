@@ -1,13 +1,11 @@
 package ale.ui;
 
 import ale.ui.ALEUIUtils;
-
 import ale.ui.ALEInputText;
 import ale.ui.ALEButton;
+import ale.ui.ALEUISpriteGroup;
 
-import scripting.haxe.ScriptSpriteGroup;
-
-class ALENumericStepper extends ScriptSpriteGroup
+class ALENumericStepper extends ALEUISpriteGroup
 {
     public var onChange:Void -> Void;
 
@@ -59,7 +57,7 @@ class ALENumericStepper extends ScriptSpriteGroup
 
         var theWidth:Float = w ?? ALEUIUtils.OBJECT_SIZE * 3;
 
-        bg = new ALEInputText(0, 0, null, theWidth, h);
+        bg = new ALEInputText(0, 0, [], theWidth, h);
         add(bg);
         bg.filter = ~/^[-+]?(\d+)?(\.\d+)?$/;
         bg.focusCallback = (isTyping) -> {

@@ -137,7 +137,7 @@ class ALEInputText extends ALEMouseSpriteGroup
         FlxG.stage.addEventListener('keyDown', onKeyDown, false, 1);
 	}
 
-	override function update(elapsed:Float):Float
+	override function uiUpdate(elapsed:Float):Float
 	{
 		if (isTyping)
 		{
@@ -161,8 +161,8 @@ class ALEInputText extends ALEMouseSpriteGroup
 				isTyping = false;
 			}
 		}
-
-		super.update(elapsed);
+		
+		super.uiUpdate(elapsed);
 	}
 
     override function destroy()
@@ -250,12 +250,12 @@ class ALEInputText extends ALEMouseSpriteGroup
 		if (toAdd != null && printReg.match(toAdd))
 		{
 			if (filter != null)
-				if (!filter.match(toAdd))
-					return;
+				if (filter.match(toAdd))
+				{
+					value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
 
-			value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
-
-			curSelected = curSelected + toAdd.length;
+					curSelected = curSelected + toAdd.length;
+				}
 		}
     }
 

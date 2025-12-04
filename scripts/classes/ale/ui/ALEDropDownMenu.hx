@@ -4,21 +4,17 @@ import ale.ui.ALEUIUtils;
 
 import ale.ui.ALEButton;
 import ale.ui.ALEInputText;
-
-import scripting.haxe.ScriptSpriteGroup;
-
-//import flixel.group.FlxSpriteGroup;
-import flixel.group.FlxTypedSpriteGroup as FlxSpriteGroup;
+import ale.ui.ALEUISpriteGroup;
 
 import flixel.math.FlxRect;
 
-class ALEDropDownMenu extends ScriptSpriteGroup
+class ALEDropDownMenu extends ALEUISpriteGroup
 {
 	public var bg:ALEInputText;
 
 	public var openButton:ALEButton;
 
-	public var buttons:FlxSpriteGroup<ALEButton>;
+	public var buttons:ALEUISpriteGroup<ALEButton>;
 
 	public var value(default, set):String;
 	function set_value(val:String):String
@@ -88,7 +84,7 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 			open = !open;
 		};
 
-		buttons = new FlxSpriteGroup();
+		buttons = new ALEUISpriteGroup();
 		buttons.y = theHeight;
 
 		options = opts;
@@ -115,8 +111,10 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 		add(buttons);
 	}
 
-	override function update(elapsed:Float)
+	override function uiUpdate(elapsed:Float)
 	{
+		super.uiUpdate(elapsed);
+
 		if (open)
 		{
 			if (FlxG.mouse.wheel != 0)
@@ -130,11 +128,7 @@ class ALEDropDownMenu extends ScriptSpriteGroup
 		}
 
 		for (but in buttons)
-		{
 			but.active = but.y - buttons.y + buttonsY > -theHeight;
-		}
-
-		super.update(elapsed);
 	}
 
 	public function addOption(option:String)
