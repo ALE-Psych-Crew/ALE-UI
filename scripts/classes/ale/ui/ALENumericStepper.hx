@@ -55,11 +55,11 @@ class ALENumericStepper extends ALEUISpriteGroup
     {
         super(x, y);
 
-        var theWidth:Float = w ?? ALEUIUtils.OBJECT_SIZE * 3;
+        var theWidth:Float = Math.max(80, w ?? (ALEUIUtils.OBJECT_SIZE * 3.2));
 
-        bg = new ALEInputText(0, 0, [], theWidth, h);
+        bg = new ALEInputText(0, 0, null, theWidth, h);
         add(bg);
-        bg.filter = ~/^[-+]?(\d+)?(\.\d+)?$/;
+        bg.filter = ~/^[0-9\.\-]+$/;
         bg.focusCallback = (isTyping) -> {
             if (!isTyping)
             {

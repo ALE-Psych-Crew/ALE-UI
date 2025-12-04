@@ -44,6 +44,8 @@ class ALEInputText extends ALEMouseSpriteGroup
 
 	public var focusCallback:Bool -> Void;
 
+	public var typeCallback:String -> Void;
+
 	public var isTyping(default, set):Bool;
 	function set_isTyping(val:Bool):Bool
 	{
@@ -102,7 +104,7 @@ class ALEInputText extends ALEMouseSpriteGroup
 		theWidth = Math.floor(width ?? (ALEUIUtils.OBJECT_SIZE * 6));
 		theHeight = Math.floor(height ?? ALEUIUtils.OBJECT_SIZE);
 
-		labelX = theWidth / 36;
+		labelX = Math.max(1, theWidth / 36);
 
 		bg = new FlxSprite();
 		bg.pixels = ALEUIUtils.uiBitmap(theWidth, theHeight, false, -25);
@@ -250,17 +252,23 @@ class ALEInputText extends ALEMouseSpriteGroup
 		if (toAdd != null && printReg.match(toAdd))
 		{
 			if (filter != null)
-				if (filter.match(toAdd))
-				{
-					value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
+				if (!filter.match(toAdd))
+					return;
 
-					curSelected = curSelected + toAdd.length;
-				}
+			value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
+
+			if (typeCallback != null)
+				typeCallback(toAdd);
+
+			curSelected = curSelected + toAdd.length;
 		}
     }
 
 	function updateSearch()
 	{
+		if (toSearch == null)
+			return;
+
 		searchResult = '';
 
 		if (toSearch != null && value.length > 0)

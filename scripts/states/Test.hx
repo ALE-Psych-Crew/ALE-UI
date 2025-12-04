@@ -36,8 +36,11 @@ button.releaseCallback = () -> {
 var circleButton:ALECircleButton = new ALECircleButton(30, 80, 'Creí', null, false);
 tab.addObj('Group 1', circleButton);
 
-var inputText:ALEInputText = new ALEInputText(30, 130, ['Fabricio', 'Está Atrás', 'Atrás', 'De nuestra', 'Espalda'], null, null, 'Frase Épica');
+var inputText:ALEInputText = new ALEInputText(30, 130);
 tab.addObj('Group 2', inputText);
+inputText.typeCallback = (a) -> {
+    debugTrace(a);
+}
 
 var dropDownMenu:ALEDropDownMenu = new ALEDropDownMenu(30, 180, ['Que', 'Sería', 'Negro']);
 tab.addObj('Group 2', dropDownMenu);
@@ -46,6 +49,7 @@ dropDownMenu.options = ['oso', 'donde', 'tu', 'ta', 'oso'];
 var numericStepper:ALENumericStepper = new ALENumericStepper(30, 230);
 //tab.addObj('Group 2', numericStepper);
 add(numericStepper);
+
 function onUpdate(elapsed:Float)
 {
     if (Controls.RESET && !inputText.isTyping)
