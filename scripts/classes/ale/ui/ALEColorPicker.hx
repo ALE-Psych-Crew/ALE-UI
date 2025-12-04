@@ -11,13 +11,6 @@ import flixel.util.FlxSpriteUtil;
 
 import ale.ui.UpdateColorType;
 
-enum UpdateColorType
-{
-	HUE;
-	HSB;
-	BOTH;
-}
-
 class ALEColorPicker extends ALEUISpriteGroup
 {
     var shaderHSB:String = '
