@@ -97,10 +97,10 @@ class ALENumericStepper extends ALEUISpriteGroup
         };
         minusButton.changeCursorSkin = false;
 
-        value = initial ?? 0;
-
         this.max = max ?? 100;
 
         this.min = min ?? 0;
+
+        value = initial ?? 0;
     }
 }
