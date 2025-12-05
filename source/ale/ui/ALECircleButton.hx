@@ -1,129 +1,80 @@
 package ale.ui;
 
-import flixel.FlxSprite;
-import flixel.text.FlxText;
-import flixel.text.FlxText.FlxTextAlign;
-import flixel.addons.display.shapes.FlxShapeCircle;
-
-import ale.ui.ALEUISpriteGroup;
+import ale.ui.ALEMouseSpriteGroup;
 import ale.ui.ALEUIUtils;
 
-class ALECircleButton extends ALEUISpriteGroup
+import flixel.FlxSprite;
+import flixel.text.FlxText;
+import flixel.addons.display.shapes.FlxShapeCircle;
+
+import openfl.ui.Mouse;
+
+class ALECircleButton extends ALEMouseSpriteGroup
 {
-    public var bg:FlxShapeCircle;
-    public var circle:FlxShapeCircle;
-    public var text:FlxText;
-    public var mask:FlxSprite;
+	public var bg:FlxSprite;
+	public var fill:FlxSprite;
+	public var label:FlxText;
+	public var mask:FlxSprite;
 
-    public var value(default, set):Bool = false;
-    function set_value(val:Bool):Bool
-    {
-        value = val;
+	public var changeCursorSkin:Bool = true;
 
-        if (circle != null)
-            circle.visible = value;
+	public var value(default, set):Bool;
+	function set_value(val:Bool):Bool
+	{
+		value = val;
 
-        return value;
-    }
+		fill.visible = val;
 
-    public var animated:Bool = true;
+		return value;
+	}
 
-    public var canPress(default, set):Bool = true;
-    function set_canPress(value:Bool):Bool
-    {
-        canPress = value;
+	public function new(?x:Float, ?y:Float, ?lbl:String, ?size:Float, ?defValue:Bool)
+	{
+		super(x, y);
 
-        if (bg != null) // REMOVE THIS
-        {
-            if (pressed)
-            {
-                if (animated)
-                    bg.scale.x = bg.scale.y = circle.scale.x = circle.scale.y = 1;
+		size ??= ALEUIUtils.OBJECT_SIZE;
 
-                pressed = false;
-            }
+		var intSize:Int = Math.floor(size / 2);
 
-            mask.color = canPress ? FlxColor.WHITE : FlxColor.BLACK;
-        }
+		bg = new FlxShapeCircle(0, 0, intSize, {thickness: 2, color: ALEUIUtils.OUTLINE_COLOR}, ALEUIUtils.COLOR);
+		add(bg);
 
-        return canPress;
-    }
+		var fillSize:Int = Math.floor(intSize * 0.55);
 
-    public function new(?x:Float, ?y:Float, ?label:String, ?size:Float, ?initial:Bool)
-    {
-        super(x, y);
-        
-        size ??= 11.5;
+		fill = new FlxShapeCircle(bg.width / 2 - fillSize, bg.height / 2 - fillSize, Math.floor(fillSize), {color: 0x0}, ALEUIUtils.OUTLINE_COLOR);
+		add(fill);
 
-        bg = new FlxShapeCircle(0, 0, size, {thickness: size / 10, color: ALEUIUtils.outlineColor}, ALEUIUtils.color);
-        add(bg);
-        bg.x = this.x + 0.75;
-        bg.y = this.y + 0.75;
+		mask = new FlxShapeCircle(0, 0, intSize, {thickness: 2, color: FlxColor.WHITE}, FlxColor.WHITE);
+		add(mask);
+		mask.alpha = 0;
 
-        circle = new FlxShapeCircle(0, 0, size / 2, {thickness: 0, color: ALEUIUtils.outlineColor}, ALEUIUtils.outlineColor);
-        add(circle);
-        circle.x = bg.x + bg.width / 2 - circle.width / 2;
-        circle.y = bg.y + bg.height / 2 - circle.height / 2;
+		label = new FlxText(intSize * 2.4, 0, 0, lbl ?? 'Button', Math.floor(intSize * 1.5));
+		add(label);
+		label.y = this.y + intSize - label.height / 2;
+		label.font = ALEUIUtils.FONT;
 
-        mask = new FlxShapeCircle(0, 0, size, {thickness: size / 10, color: FlxColor.WHITE}, FlxColor.WHITE);
-        add(mask);
-        mask.x = this.x + size / 20;
-        mask.y = this.y + size / 20;
+		value = defValue ?? false;
+	}
 
-        text = new FlxText(0, 0, 0, label ?? 'CircleButton', Math.floor(size * 1.75));
-        text.font = ALEUIUtils.font;
-        add(text);
-        text.x = this.x + bg.width + size / 2;
-        text.y = this.y + bg.height / 2 - text.height / 2;
+	override function overlapCallbackHandler(isOver:Bool)
+	{
+		mask.alpha = isOver || pressed ? 0.25 : 0;
 
-        value = initial ?? false;
-    }
+		if (changeCursorSkin)
+			Mouse.cursor = isOver ? 'button' : 'arrow';
 
-    public var pressed:Bool = false;
+		super.overlapCallbackHandler(isOver);
+	}
 
-    public var callback:Void -> Void;
-    public var releaseCallback:Void -> Void;
+	override function pressCallbackHandler(isPressed:Bool)
+	{
+		mask.color = isPressed ? FlxColor.BLACK : FlxColor.WHITE;
 
-    override function updateUI(elapsed:Float)
-    {
-        super.updateUI(elapsed);
+		mask.alpha = isPressed || overlaped ? 0.25 : 0;
 
-        if (mouseOverlaps(bg))
-        {
-            if (FlxG.mouse.justPressed)
-            {
-                if (canPress)
-                {
-                    if (callback != null)
-                        callback();
+		if (!isPressed)
+			value = !value;
 
-                    if (animated)
-                        bg.scale.x = bg.scale.y = circle.scale.x = circle.scale.y = 0.975;
-
-                    pressed = true;
-                }
-            }
-        }
-
-        if (FlxG.mouse.justReleased && pressed)
-        {
-            value = !value;
-
-            if (releaseCallback != null)
-                releaseCallback();
-
-            if (animated)
-                bg.scale.x = bg.scale.y = circle.scale.x = circle.scale.y = 1;
-
-            pressed = false;
-        }
-
-        if (!animated)
-            return;
-
-        var maskAlpha:Float = canPress ? (alpha * (pressed ? 0.25 : mouseOverlaps(bg) ? 0.1 : 0)) : 0.25;
-
-        if (mask.alpha != maskAlpha)
-            mask.alpha = maskAlpha;
-    }
+		super.pressCallbackHandler(isPressed);
+	}
 }

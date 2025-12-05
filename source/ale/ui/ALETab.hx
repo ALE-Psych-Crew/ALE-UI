@@ -1,107 +1,90 @@
 package ale.ui;
 
-import ale.ui.ALEUISpriteGroup;
-import ale.ui.ALEUISprite;
 import ale.ui.ALEUIUtils;
 import ale.ui.ALEButton;
+import ale.ui.ALEUISpriteGroup;
 
-import flixel.FlxSprite;
-import flixel.text.FlxText;
-import flixel.FlxBasic;
-import flixel.tweens.FlxTween;
-import flixel.tweens.FlxEase;
+import flixel.math.FlxPoint;
 
 class ALETab extends ALEUISpriteGroup
 {
-    public var bg:ALEUISprite;
     public var border:ALEButton;
 
-    var minButton:ALEButton;
+    public var bg:ALEUISprite;
 
-    public var staticObjects:Array<FlxSprite> = [];
-
-    public var minimized(default, set):Bool;
-    function set_minimized(value:Bool):Bool
+    public var draggable(default, set):Bool;
+    function set_draggable(val:Bool):Bool
     {
-        minimized = value;
+        draggable = val;
 
-        for (obj in members)
-            if (!staticObjects.contains(obj))
-                if (obj is ALEUIObject)
-                {
-                    var obj:ALEUIObject = cast obj;
+        if (!draggable)
+            dragging = false;
 
-                    obj.allowDraw = obj.allowUpdate = !minimized;
-                }
-        
-        return minimized;
+        return draggable;
     }
 
-    var canMove:Bool = false;
-
-    public var mouseOffset:Dynamic = {
-        x: 0,
-        y: 0
-    };
-
-    public var movable:Bool = true;
-
-    public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float, ?title:String)
+    var dragging(default, set):Bool;
+    function set_dragging(val:Bool):Bool
     {
-        super();
+        dragging = val;
 
-        var intW:Int = Math.floor(w ?? 500);
-        var intH:Int = Math.floor(h ?? 500);
+        if (dragging)
+        {
+            var mousePos:FlxPoint = FlxG.mouse.getScreenPosition(cameras[0]);
 
-        bg = new ALEUISprite();
-        bg.makeGraphic(intW, intH, ALEUIUtils.setAlpha(ALEUIUtils.adjustColorBrightness(ALEUIUtils.color, -50), 0.75));
-        ALEUIUtils.outlineBitmap(bg.pixels);
-        add(bg);
+            mouseOffset = FlxPoint.get(mousePos.x - this.x, mousePos.y - this.y);
+        } else {
+            x = FlxMath.bound(x, -width + ALEUIUtils.OBJECT_SIZE, FlxG.width - ALEUIUtils.OBJECT_SIZE);
+            y = FlxMath.bound(y, ALEUIUtils.OBJECT_SIZE, FlxG.height);
+        }
 
-        border = new ALEButton(0, 0, intW, 25, false, ' ' + (title ?? 'ALE Psych'));
+        return dragging;
+    }
+
+    var mouseOffset:FlxPoint;
+
+    public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float, ?title:String, ?isDraggable:Bool)
+    {
+        super(x, y);
+
+        w ??= (ALEUIUtils.OBJECT_SIZE * 10);
+        h ??= (ALEUIUtils.OBJECT_SIZE * 10);
+
+        border = new ALEButton(0, 0, title ?? 'Title', w, null, null, false);
+        border.label.alignment = 'left';
+        border.label.x = 10;
+        border.changeCursorSkin = false;
         add(border);
-        border.text.x = 0;
-        border.y = bg.y - border.height + 2;
-        border.animated = false;
-        border.callback = () -> {
-            if (!movable)
-                return;
-
-            canMove = true;
-
-            mouseOffset.x = mousePosition.x - this.x;
-            mouseOffset.y = mousePosition.y - this.y;
+        border.y = this.y - border.bg.height;
+        border.pressCallback = () -> {
+            if (draggable)
+                dragging = true;
         };
         border.releaseCallback = () -> {
-            if (!movable)
-                return;
-            
-            canMove = false;
+            if (draggable)
+                dragging = false;
         };
 
-        minButton = new ALEButton(0, border.y, border.height, border.height, false, '-');
-        add(minButton);
-        minButton.x = border.x + border.width - border.height;
-        minButton.releaseCallback = () -> {
-            minimized = !minimized;
+        bg = new ALEUISprite();
+		bg.pixels = ALEUIUtils.uiBitmap(Math.floor(w), Math.floor(h), false, -75);
+		bg.updateHitbox();
+		add(bg);
 
-            minButton.text.text = minimized ? '+' : '-';
-        };
+        dragging = false;
 
-        staticObjects = [border, minButton];
-
-        this.x = x;
-        this.y = y ?? 25;
+        draggable = isDraggable ?? true;
     }
 
-    override function updateUI(elapsed:Float)
+    override function uiUpdate(elapsed:Float)
     {
-        if (canMove)
+        super.uiUpdate(elapsed);
+
+        if (dragging)
         {
-            x = mousePosition.x - mouseOffset.x;
-            y = mousePosition.y - mouseOffset.y;
+            var mousePos:FlxPoint = FlxG.mouse.getScreenPosition(cameras[0]);
+
+            x = mousePos.x - mouseOffset.x;
+            y = mousePos.y - mouseOffset.y;
         }
-        
-        super.updateUI(elapsed);
     }
 }

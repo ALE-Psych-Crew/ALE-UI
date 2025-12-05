@@ -1,434 +1,333 @@
 package ale.ui;
 
-import ale.ui.ALEUIUtils;
-import ale.ui.ALEUISpriteGroup;
-
-import flixel.FlxSprite;
 import flixel.input.keyboard.FlxKey;
-import flixel.text.FlxText;
 import flixel.math.FlxRect;
-
-import funkin.visuals.shaders.ALERuntimeShader;
-
-import openfl.events.KeyboardEvent;
-import openfl.ui.Keyboard;
+import flixel.text.FlxText;
 
 import lime.system.Clipboard;
 
-import haxe.ds.StringMap;
+import openfl.events.KeyboardEvent;
+import openfl.ui.Mouse;
+
+import ale.ui.ALEMouseSpriteGroup;
+import ale.ui.ALEUIUtils;
 
 using StringTools;
-    
-enum abstract Filter(String)
-{
-    var NO_FILTER = 'no_filter';
-    var ONLY_ALPHA = 'only_alpha';
-    var ONLY_NUMERIC = 'only_numeric';
-    var ONLY_ALPHANUMERIC = 'only_alphanumeric';
+
+typedef CheckPosition = {
+	result:Bool,
+	position:Int
 }
 
-enum abstract Case(String)
+class ALEInputText extends ALEMouseSpriteGroup
 {
-    var UPPER_CASE = 'upper_case';
-    var LOWER_CASE = 'lower_case';
-    var NO_CASE = 'no_case';
-}
+	var theWidth:Int;
+	var theHeight:Int;
 
-class ALEInputText extends ALEUISpriteGroup
-{
-    public var bg:ALEUISprite;
-    public var searchText:FlxText;
-    public var text:FlxText;
-    public var line:FlxSprite;
+	var labelX:Float;
 
-    public var intW:Int = 0;
-    public var intH:Int = 0;
+	public var bg:ALEUISprite;
 
-    public var openCallback:Void -> Void;
-    public var closeCallback:Void -> Void;
+	public var searchLabel:FlxText;
+	public var label:FlxText;
 
-    public var canWrite(default, set):Bool = false;
-    function set_canWrite(val:Bool):Bool
-    {
-        if (canWrite != val)
+	public var cursor:ALEUISprite;
+	var cursorTimer:Float = 0;
+
+	public var curSelected(default, set):Int;
+	function set_curSelected(val:Int):Int
+	{
+		curSelected = val;
+
+		updateCursorPos();
+
+		return curSelected;
+	}
+
+	public var focusCallback:Bool -> Void;
+
+	public var typeCallback:String -> Void;
+
+	public var isTyping(default, set):Bool;
+	function set_isTyping(val:Bool):Bool
+	{
+        if (isTyping != val)
             ALEUIUtils.usedInputs = ALEUIUtils.usedInputs + (val ? 1 : -1);
 
-        canWrite = val;
+		isTyping = val;
 
-        if (line != null)
-            line.visible = canWrite;
+		cursor.visible = isTyping;
 
-        return canWrite;
-    }
+		cursorTimer = 0;
 
-    public var value(default, set):String = '';
-    function set_value(val:String):String
-    {
-        value = val;
+		if (focusCallback != null)
+			focusCallback(isTyping);
 
-        if (text != null)
-        {
-            text.text = value;
+		return isTyping;
+	}
 
-            setLinePos();
-        }
+	public var value(default, set):String;
+	function set_value(val:String):String
+	{
+		value = val;
 
-        return value;
-    }
+		label.text = value;
 
-    public var curIndex(default, set):Int = 0;
-    function set_curIndex(val:Int):Int
-    {
-        curIndex = Math.floor(FlxMath.bound(val, 0, value.length));
+		updateSearch();
 
-        return curIndex;
-    }
+		return value;
+	}
 
-    public var searchList:Array<String> = [];
+	public var toSearch(default, set):Array<String>;
+	function set_toSearch(val:Array<String>):Array<String>
+	{
+		toSearch = val;
 
-    public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float, ?searchList:Array<String>)
-    {
-        super(x, y);
+		updateSearch();
 
-        intW = Math.floor(w ?? 150);
-        intH = Math.floor(h ?? 25);
+		return toSearch;
+	}
 
-        bg = new ALEUISprite();
-        bg.makeGraphic(intW, intH, ALEUIUtils.adjustColorBrightness(ALEUIUtils.color, -50));
-        ALEUIUtils.outlineBitmap(bg.pixels);
-        add(bg);
+	public var searchDefault:String = '';
+	function set_searchDefault(val:String):String
+	{
+		searchDefault = val;
 
-        searchText = new FlxText(0, 0, 0, '', Math.floor(Math.min(intW, intH) / 1.5));
-        searchText.font = ALEUIUtils.font;
-        searchText.x = searchText.size / 2;
-        searchText.y = bg.height / 2 - searchText.height / 2;
-        searchText.alpha = 0.5;
-        add(searchText);
+		updateSearch();
 
-        text = new FlxText(0, 0, 0, '', Math.floor(Math.min(intW, intH) / 1.5));
-        text.font = ALEUIUtils.font;
-        text.x = text.size / 2;
-        text.y = bg.height / 2 - text.height / 2;
-        add(text);
+		return searchDefault;
+	}
 
-        line = new FlxSprite().makeGraphic(2, Math.floor(intH * 0.6), ALEUIUtils.outlineColor);
-        add(line);
-        line.y = this.y + bg.height / 2 - line.height / 2;
+	public var searchResult:String = '';
 
-        value = '';
+	public var filter:EReg;
 
-        curIndex = value.length;
+	public function new(?x:Float, ?y:Float, ?search:Array<String>, ?width:Float, ?height:Float, ?searchDef:String, ?defValue:String)
+	{
+		super(x, y);
 
-        setLinePos();
+		theWidth = Math.floor(width ?? (ALEUIUtils.OBJECT_SIZE * 6));
+		theHeight = Math.floor(height ?? ALEUIUtils.OBJECT_SIZE);
 
+		labelX = Math.floor(Math.max(1, theWidth / 36));
+
+		bg = new ALEUISprite();
+		bg.pixels = ALEUIUtils.uiBitmap(theWidth, theHeight, false, -25);
+		add(bg);
+
+		searchLabel = new FlxText(labelX, 0, 0, '', Math.floor(Math.min(theWidth, theHeight) / 1.5));
+		searchLabel.alpha = 0.5;
+		searchLabel.font = ALEUIUtils.FONT;
+		searchLabel.y = theHeight / 2 - searchLabel.height / 2;
+		add(searchLabel);
+
+		label = new FlxText(labelX, 0, 0, '', Math.floor(Math.min(theWidth, theHeight) / 1.5));
+		label.font = ALEUIUtils.FONT;
+		label.y = theHeight / 2 - label.height / 2;
+		add(label);
+
+		cursor = new ALEUISprite(labelX);
+		cursor.makeGraphic(Math.floor(theWidth * 0.0125), Math.floor(theHeight * 0.65));
+		cursor.y = theHeight / 2 - cursor.height / 2;
+		add(cursor);
+		cursor.alpha = 0.75;
+
+		value = defValue ?? '';
+
+		curSelected = value.length;
+
+		toSearch = search;
+		
+		searchDefault = searchDef;
+
+		updateSearch();
+		
         FlxG.stage.addEventListener('keyDown', onKeyDown, false, 1);
+	}
 
-        canWrite = false;
+	override function uiUpdate(elapsed:Float)
+	{
+		if (isTyping)
+		{
+			if (cursorTimer < 0.5)
+			{
+				cursorTimer += elapsed;
+			} else {
+				cursor.visible = !cursor.visible;
 
-        this.searchList = searchList ?? [];
-    }
+				cursorTimer = 0;
+			}
+		}
 
-    var curTime:Float = 0;
-
-    override function updateUI(elapsed:Float)
-    {
-        if (FlxG.mouse.justPressed)
-            if (mouseOverlaps(bg) && !canWrite)
-            {
-                canWrite = true;
-
-                if (openCallback != null)
-                    openCallback();
-            } else if (!mouseOverlaps(bg) && canWrite) {
-                canWrite = false;
-
-                if (closeCallback != null)
-                    closeCallback();
-            }
-
-        if (canWrite)
-        {
-            curTime += elapsed;
-
-            if (curTime >= 0.5)
-            {
-                curTime = 0;
-
-                line.visible = !line.visible;
-            }
-        }
-        
-        super.updateUI(elapsed);
-    }
+		if (FlxG.mouse.justPressed)
+		{
+			if (overlaped)
+			{
+				if (!isTyping)
+					isTyping = true;
+			} else {
+				isTyping = false;
+			}
+		}
+		
+		super.uiUpdate(elapsed);
+	}
 
     override function destroy()
     {
         FlxG.stage.removeEventListener('keyDown', onKeyDown, false);
 
-        canWrite = false;
+        isTyping = false;
 
         super.destroy();
     }
 
+	override function overlapCallbackHandler(isOver:Bool)
+	{
+		Mouse.cursor = isOver ? 'ibeam' : 'arrow';
+
+		super.overlapCallbackHandler(isOver);
+	}
+
     function onKeyDown(e:KeyboardEvent):Void
     {
-        if (!allowUpdate || !allowDraw || !canWrite)
+        if (!isTyping)
             return;
+
+		var punctReg:EReg = ~/[.,;:¡!¿?"'()\[\]{}\-—…]/;
+		var alphaNumericReg:EReg = ~/[\w]/;
+		var spaceReg:EReg = ~/[\s]/;
+
+		var printReg:EReg = ~/[\x20-\x7E]/;
+
+		var regs:Array<EReg> = [punctReg, spaceReg, alphaNumericReg];
 
         final key:FlxKey = e.keyCode;
 
-        var addString:Null<String> = null;
+		var toAdd:String = null;
 
         switch (key)
         {
             case FlxKey.SHIFT, FlxKey.CONTROL, FlxKey.BACKSLASH, FlxKey.ALT:
             
             case FlxKey.ENTER, FlxKey.ESCAPE:
-                canWrite = false;
-
-                if (closeCallback != null)
-                    closeCallback();
-
-                return;
+				isTyping = false;
 
             case FlxKey.TAB:
-                if (searchText.text.length >= 1)
-                {
-                    value = searchText.text;
+				if (searchResult.length > 0)
+				{
+					value = searchResult;
 
-                    curIndex = value.length;
-
-                    setLinePos();
-                }
+					curSelected = value.length;
+				}
 
             case FlxKey.HOME:
-                curIndex = 0;
-
-                setLinePos();
+				curSelected = 0;
 
             case FlxKey.END:
-                curIndex = value.length;
-
-                setLinePos();
+				curSelected = value.length;
 
             case FlxKey.LEFT:
-                if (e.ctrlKey)
-                {
-                    while (curIndex > 0 && value.charAt(curIndex - 1) == ' ')
-                        curIndex--;
-
-                    while (curIndex > 0 && value.charAt(curIndex - 1) != ' ')
-                        curIndex--;
-                } else {
-                    curIndex--;
-                }
-
-                setLinePos();
+				curSelected = Math.floor(Math.max(curSelected - (e.ctrlKey ? typedCharacterRegex(true, regs) - 1 : 1), 0));
 
             case FlxKey.RIGHT:
-                if (e.ctrlKey)
-                {
-                    while (curIndex < value.length && value.charAt(curIndex) == ' ')
-                        curIndex++;
-
-                    while (curIndex < value.length && value.charAt(curIndex) != ' ')
-                        curIndex++;
-                } else {
-                    curIndex++;
-                }
-                
-                setLinePos();
+				curSelected = Math.floor(Math.min(curSelected + (e.ctrlKey ? typedCharacterRegex(false, regs) : 1), value.length));
 
             case FlxKey.BACKSPACE:
-                if (e.ctrlKey)
-                    eraseWord();
-                else
-                    eraseString();
+				var toChange:Int = e.ctrlKey ? typedCharacterRegex(true, regs) - 1 :  1;
+
+				value = value.substring(0, curSelected - toChange) + value.substring(curSelected);
+
+				curSelected = Math.floor(Math.max(curSelected - toChange, 0));
 
             case FlxKey.DELETE:
-                if (e.ctrlKey)
-                    suprWord();
-                else
-                    suprString();
+				value = value.substring(0, curSelected) + value.substring(curSelected + (e.ctrlKey ? typedCharacterRegex(false, regs) : 1));
 
             case FlxKey.SPACE:
-                addString = ' ';
+				toAdd = ' ';
 
             default:
-                if (e.ctrlKey && key == FlxKey.V)
-                {
-                    addString = Clipboard.text;
-                } else {
-                    addString = String.fromCharCode(e.charCode);
-                }
-        }
-        
-        if (addString != null && addString.length >= 1)
-            setString(filter(addString));
-    }
-
-    function eraseString()
-    {
-        if (curIndex <= 0)
-            return;
-
-        value = value.substring(0, curIndex - 1) + value.substring(curIndex);
-
-        setLinePos(-1);
-    }
-
-    function suprString()
-    {
-        if (curIndex >= value.length)
-            return;
-
-        value = value.substring(0, curIndex) + value.substring(curIndex + 1);
-
-        setLinePos();
-    }
-
-    function eraseWord()
-    {
-        if (curIndex <= 0)
-            return;
-
-        var start = curIndex;
-        
-        var skipChars:Bool = value.charAt(start - 1) == ' ' && value.charAt(start - 2) == ' ';
-
-        while (start > 0 && value.charAt(start - 1) == ' ')
-            start--;
-
-        while (!skipChars && start > 0 && value.charAt(start - 1) != ' ')
-            start--;
-
-        value = value.substring(0, start) + value.substring(curIndex);
-
-        curIndex = start;
-
-        setLinePos();
-    }
-
-    function suprWord()
-    {
-        if (curIndex >= value.length)
-            return;
-
-        var start = curIndex;
-        
-        var skipChars = value.charAt(start) == ' ' && value.charAt(start + 1) == ' ';
-
-        while (start < value.length && value.charAt(start) == ' ')
-            start++;
-
-        while (!skipChars && start < value.length && value.charAt(start) != ' ')
-            start++;
-
-        value = value.substring(0, curIndex) + value.substring(start);
-    }
-
-    function setString(str:String)
-    {
-        if (curIndex < value.length)
-            value = value.substring(0, curIndex) + str + value.substring(curIndex);
-        else
-            value += str;
-
-        setLinePos(1);
-    }
-
-    public var forceCase:Case = NO_CASE;
-
-    public var filterMode:Filter = NO_FILTER;
-
-    function filter(text:String):String
-    {
-        if (forceCase == UPPER_CASE)
-            text = text.toUpperCase();
-        else if (forceCase == LOWER_CASE)
-            text = text.toLowerCase();
-
-        if (filterMode != NO_FILTER)
-        {
-            var pattern:EReg = null;
-
-            switch (filterMode)
-            {
-                case ONLY_ALPHA:
-                    pattern = ~/[^a-zA-Z]*/g;
-                case ONLY_NUMERIC:
-                    pattern = ~/[^0-9]*/g;
-                case ONLY_ALPHANUMERIC:
-                    pattern = ~/[^a-zA-Z0-9]*/g;
-                default:
-            }
-
-            if (pattern != null)
-                text = pattern.replace(text, '');
+				if (e.ctrlKey && key == FlxKey.C)
+					Clipboard.text = value;
+				else if (e.ctrlKey && key == FlxKey.V)
+					toAdd = Clipboard.text;
+				else
+					toAdd = String.fromCharCode(e.charCode);
         }
 
-        return text;
+		if (toAdd != null && printReg.match(toAdd))
+		{
+			if (filter != null)
+				if (!filter.match(toAdd))
+					return;
+
+			value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
+
+			if (typeCallback != null)
+				typeCallback(toAdd);
+
+			curSelected = curSelected + toAdd.length;
+		}
     }
 
-    var shouldSearch:String = '';
+	function updateSearch()
+	{
+		if (toSearch == null)
+			return;
 
-    var searchObj:String = '';
+		searchResult = '';
 
-    public function setLinePos(?change:Int)
-    {
-        if (change != null)
-            curIndex += change;
+		if (toSearch != null && value.length > 0)
+			for (sch in toSearch)
+				if (sch.toLowerCase().startsWith(value.toLowerCase()))
+				{
+					searchResult = sch;
 
-        if (canWrite)
-            line.visible = true;
+					break;
+				}
 
-        var bounds = text.textField.getCharBoundaries(curIndex - 1);
+		searchLabel.text = value.length <= 0 ? (searchDefault ?? '') : searchResult;
+	}
 
-        if (bounds != null)
-            line.x = text.x + bounds.x + bounds.width;
-        else
-            line.x = text.x;
-        
-        var padding:Float = text.size / 2;
+	function updateCursorPos()
+	{
+		cursor.visible = isTyping;
 
-        var leftLimit = bg.x + padding;
+		cursorTimer = 0;
 
-        var rightLimit = bg.x + bg.width - padding;
+		var bounds = label.textField.getCharBoundaries(curSelected - 1);
 
-        if (line.x > rightLimit)
-        {
-            var diff = line.x - rightLimit;
+		cursor.x = this.x + labelX + (bounds == null ? 0 : bounds.x + bounds.width) - 1;
 
-            searchText.x = text.x -= diff;
+		var overflow:Float = Math.min(this.x + bg.width - labelX - cursor.width - cursor.x, 0);
 
-            line.x -= diff;
-        }
+		label.x = searchLabel.x = this.x + labelX + overflow;
+		
+		cursor.x += overflow;
 
-        if (line.x < leftLimit)
-        {
-            var diff = leftLimit - line.x;
+		label.clipRect = FlxRect.get(-overflow, 0, bg.width - labelX * 2, label.frameHeight);
+		searchLabel.clipRect = FlxRect.get(-overflow, 0, bg.width - labelX * 2, searchLabel.frameHeight);
+	}
+	
+	function typedCharacterRegex(back:Bool, regs:Array<EReg>):Int
+	{
+		var total:Int = 1;
 
-            searchText.x = text.x += diff;
+		var curReg:EReg = null;
 
-            line.x += diff;
-        }
+		for (reg in regs)
+		{
+			if (reg.match(value.charAt(curSelected - (back ? 1 : 0))))
+			{
+				curReg = reg;
 
-        searchText.clipRect = text.clipRect = FlxRect.get(x + padding - text.x, 0, bg.width - padding * 2, text.height);
+				break;
+			}
+		}
 
-        if (shouldSearch != value)
-        {
-            shouldSearch = value;
-            
-            searchText.text = '';
+		while (curReg != null && curSelected + total * (back ? - 1 : 1) == FlxMath.bound(curSelected + total * (back ? - 1 : 1), 0, value.length) && curReg.match(value.charAt(curSelected + total * (back ? -1 : 1))))
+			total++;
 
-            if (value.length >= 1)
-                for (obj in searchList)
-                    if (obj.toLowerCase().startsWith(value.toLowerCase()))
-                    {
-                        searchText.text = obj;
-
-                        break;
-                    }
-        }
-    }
+		return total;
+	}
 }

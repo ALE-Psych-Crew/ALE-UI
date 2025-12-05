@@ -1,177 +1,93 @@
 package ale.ui;
 
+import flixel.FlxSprite;
+
 import ale.ui.ALEUISpriteGroup;
-import ale.ui.ALEUISprite;
 import ale.ui.ALEUIUtils;
 import ale.ui.ALEButton;
-
-import flixel.FlxSprite;
-import flixel.text.FlxText;
-import flixel.FlxBasic;
-import flixel.tweens.FlxTween;
-import flixel.tweens.FlxEase;
+import ale.ui.ALETab;
 
 import haxe.ds.StringMap;
 
-class ALEMultiTab extends ALEUISpriteGroup
+class ALEMultiTab extends ALETab
 {
-    public var bg:ALEUISprite;
+    public var groups:StringMap<ALEUISpriteGroup> = new StringMap<ALEUISpriteGroup>();
 
-    public var minButton:ALEButton;
-
-    var __groups:ALEUISpriteGroup;
-
-    var __activeGroup:ALEUISpriteGroup = null;
-
-    public var groups:StringMap<ALEUISpriteGroup>;
-
-    public var staticObjects:Array<FlxSprite> = [];
-
-    public var minimized(default, set):Bool;
-    function set_minimized(value:Bool):Bool
+    public var curGroup(default, set):String;
+    function set_curGroup(val:String):String
     {
-        minimized = value;
+        if (curGroup == val)
+            return curGroup;
 
-        for (obj in members)
-            if (!staticObjects.contains(obj))
-                if (obj is ALEUIObject)
-                {
-                    var obj:ALEUIObject = cast obj;
+        curGroup = val;
 
-                    obj.allowDraw = obj.allowUpdate = !minimized;
-                }
-        
-        return minimized;
-    }
-
-    var canMove:Bool = false;
-
-    public var mouseOffset:Dynamic = {
-        x: 0,
-        y: 0
-    };
-
-    public var movable:Bool = true;
-
-    public function new(titles:Array<String>, ?x:Float, ?y:Float, ?w:Float, ?h:Float, ?title:String)
-    {
-        super();
-
-        var intW:Int = Math.floor(w ?? 500);
-        var intH:Int = Math.floor(h ?? 500);
-
-        bg = new ALEUISprite();
-        bg.makeGraphic(intW, intH, ALEUIUtils.setAlpha(ALEUIUtils.adjustColorBrightness(ALEUIUtils.color, -50), 0.75));
-        ALEUIUtils.outlineBitmap(bg.pixels);
-        add(bg);
-
-        minButton = new ALEButton(0, 0, 25, 25, false, '-');
-        add(minButton);
-        minButton.y = -23;
-        minButton.x = bg.x + bg.width - 25;
-        minButton.releaseCallback = () -> {
-            minimized = !minimized;
-
-            minButton.text.text = minimized ? '+' : '-';
-        };
-
-        staticObjects = [minButton];
-
-        __groups = new ALEUISpriteGroup();
-
-        groups = new StringMap<ALEUISpriteGroup>();
-
-        for (index => title in titles)
+        for (group in groups.keys())
         {
-            var factor:Float = (intW - 25) / titles.length;
+            var grp:ALEUISpriteGroup = groups.get(group);
 
-            var butt:ALEButton = new ALEButton(factor * index, -23, factor, 25, false, title);
-            add(butt);
-            butt.callback = () -> {
-                pressFunc();
-            }
-            butt.releaseCallback = () -> {
-                releaseFunc();
-
-                selectGroup(title);
-            }
-
-            staticObjects.push(butt);
-
-            var group:ALEUISpriteGroup = new ALEUISpriteGroup();
-            __groups.add(group);
-            group.allowDraw = group.allowUpdate = false;
-
-            groups.set(title, group);
+            grp.allowUpdate = grp.allowDraw = group == curGroup;
         }
 
-        add(__groups);
-        
-        selectGroup(titles[0]);
+        return curGroup;
+    }
+    
+    public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float, ?groups:Array<String>, ?isDraggable:Bool)
+    {
+        super(x, y, w, h, '', isDraggable);
 
-        this.x = x;
-        this.y = y ?? 25;
+        var cleanGroups:Array<String> = [];
+
+        for (group in groups ??= ['Group 1', 'Group 2'])
+            if (!cleanGroups.contains(group))
+                cleanGroups.push(group);
+
+        for (index => group in cleanGroups)
+        {
+            var wid:Float = w / cleanGroups.length;
+
+            var button:ALEButton = new ALEButton(wid * index, -ALEUIUtils.OBJECT_SIZE, group, wid);
+            add(button);
+            button.changeCursorSkin = false;
+            button.releaseCallback = () -> {
+                curGroup = group;
+            };
+
+            this.groups.set(group, new ALEUISpriteGroup());
+        }
+        
+        for (group in this.groups)
+            add(group);
+
+        curGroup = cleanGroups[0];
     }
 
-    public function addObject(group:String, obj:FlxSprite):FlxSprite
+    public function addObj(group:String, obj:FlxSprite):FlxSprite
     {
-        if (groups.exists(group))
-            groups.get(group).add(obj);
+        if (!groups.exists(group))
+            return obj;
+
+        groups.get(group).add(obj);
 
         return obj;
     }
 
-    function selectGroup(id:String)
+    public function removeObj(group:String, obj:FlxSprite, ?destroy:Bool):FlxSprite
     {
-        if (minimized || !groups.exists(id))
-            return;
+        if (!groups.exists(group))
+            return obj;
 
-        if (__activeGroup != null)
-            __activeGroup.allowDraw = __activeGroup.allowUpdate = false;
+        groups.get(group).remove(obj, destroy);
 
-        __activeGroup = groups.get(id);
-
-        __activeGroup.allowDraw = __activeGroup.allowUpdate = true;
+        return obj;
     }
 
-    function pressFunc()
+    public function insertObj(group:String, index:Int, obj:FlxSprite):FlxSprite
     {
-        if (!movable)
-            return;
+        if (!groups.exists(group))
+            return obj;
 
-        canMove = true;
+        groups.get(group).insert(index, obj);
 
-        mouseOffset.x = mousePosition.x - this.x;
-        mouseOffset.y = mousePosition.y - this.y;
-    }
-
-    function releaseFunc()
-    {
-        if (!movable)
-            return;
-        
-        canMove = false;
-
-        if (this.x > FlxG.width || this.y > FlxG.height)
-        {
-            FlxTween.cancelTweensOf(this);
-
-            if (this.x > FlxG.width)
-                FlxTween.tween(this, {x: FlxG.width - 40}, 0.5, {ease: FlxEase.cubeOut});
-
-            if (this.y - 40 > FlxG.height)
-                FlxTween.tween(this, {y: FlxG.height}, 0.5, {ease: FlxEase.cubeOut});
-        }
-    }
-
-    override function updateUI(elapsed:Float)
-    {
-        if (canMove)
-        {
-            x = mousePosition.x - mouseOffset.x;
-            y = mousePosition.y - mouseOffset.y;
-        }
-        
-        super.updateUI(elapsed);
+        return obj;
     }
 }

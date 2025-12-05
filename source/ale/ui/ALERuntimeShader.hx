@@ -26,7 +26,7 @@ class ALERuntimeShader extends FlxRuntimeShader
 
 			return res;
 		} catch (error) {
-			ALEUIUtils.debugTrace('Error when Starting Shader "' + shaderName + '":\n' + error, ERROR);
+			trace('Error when Starting Shader "' + shaderName + '":\n' + error);
 
 			return null;
 		}

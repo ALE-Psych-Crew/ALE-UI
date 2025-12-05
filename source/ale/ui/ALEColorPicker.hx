@@ -1,19 +1,18 @@
 package ale.ui;
 
-import flixel.FlxSprite;
-import flixel.util.FlxColor;
-import flixel.text.FlxText;
-import flixel.text.FlxText.FlxTextAlign;
-import flixel.addons.display.shapes.FlxShapeCircle;
-
+import ale.ui.ALEMouseSprite;
 import ale.ui.ALEUISpriteGroup;
-import ale.ui.ALENumericStepper;
+import ale.ui.ALEUISprite;
 import ale.ui.ALEUIUtils;
-import ale.ui.ALERuntimeShader;
+
+import flixel.math.FlxPoint;
+import flixel.util.FlxSpriteUtil;
+
+import ale.ui.UpdateColorType;
 
 class ALEColorPicker extends ALEUISpriteGroup
 {
-    public var shaderHSB:String = '
+    var shaderHSB:String = '
         #pragma header
 
         vec3 hsv2rgb(vec3 c)
@@ -40,6 +39,10 @@ class ALEColorPicker extends ALEUISpriteGroup
         }
     ';
 
+	var selectingHSB:Bool = false;
+	public var spriteHSB:ALEMouseSprite;
+	public var selHSB:ALEUISprite;
+
     public var shaderHUE:String = '
         #pragma header
 
@@ -65,165 +68,153 @@ class ALEColorPicker extends ALEUISpriteGroup
         }
     ';
 
-    public var callback:Void -> Void;
+	var selectingHUE:Bool = false;
+	public var spriteHUE:ALEMouseSprite;
+	public var selHUE:ALEUISprite;
 
-    public var spriteHSB:FlxSprite;
-    public var selHSB:FlxSprite;
+	public function new(?x:Float, ?y:Float, ?color:Null<FlxColor>, ?w:Float, ?h:Float)
+	{
+		super(x, y);
 
-    public var spriteHUE:FlxSprite;
-    public var selHUE:FlxSprite;
+		var intW:Int = Math.floor(w ?? ALEUIUtils.OBJECT_SIZE * 6);
+		var intH:Int = Math.floor(h ?? ALEUIUtils.OBJECT_SIZE * 6);
 
-    public var curColor(default, set):FlxColor = FlxColor.WHITE;
-    function set_curColor(value:FlxColor):FlxColor
-    {
-        curColor = value;
+		spriteHSB = new ALEMouseSprite();
+		spriteHSB.makeGraphic(intW, intH, FlxColor.BLACK);
+		add(spriteHSB);
+		ALEUIUtils.outlineBitmap(spriteHSB.pixels);
+		spriteHSB.shader = new ALERuntimeShader('shaderHSB', shaderHSB);
+		spriteHSB.pressCallback = () -> {
+			selectingHSB = true;
+		};
+		spriteHSB.releaseCallback = () -> {
+			selectingHSB = false;
+		};
 
-        if (spriteHUE != null && selHUE != null) // REMOVE
-        {
-            cast(spriteHSB.shader, ALERuntimeShader).setFloat('hue', hue);
+		var radius:Int = Math.floor(Math.max(intW, intH) / 15);
 
-            selHUE.x = x + intW * (hue / 360);
-            
-            setColorOffset(selHUE, FlxColor.fromHSB(hue, 1, 1));
-        }
+		selHSB = new ALEUISprite();
+		selHSB.makeGraphic(radius, radius, FlxColor.BLACK);
+		ALEUIUtils.outlineBitmap(selHSB.pixels);
+		add(selHSB);
+		selHSB.offset.x = selHSB.offset.y = radius / 2;
+		selHSB.angle = 45;
 
-        if (spriteHSB != null && selHSB != null) // REMOVE
-        {
-            selHSB.y = y + spriteHSB.height - spriteHSB.height * brigthness;
+		spriteHUE = new ALEMouseSprite(0, intH * 1.1);
+		spriteHUE.makeGraphic(intW, Math.floor(intH / 7.5), FlxColor.BLACK);
+		ALEUIUtils.outlineBitmap(spriteHUE.pixels);
+		add(spriteHUE);
+		spriteHUE.shader = new ALERuntimeShader('shaderHUE', shaderHUE);
+		spriteHUE.pressCallback = () -> {
+			selectingHUE = true;
+		};
+		spriteHUE.releaseCallback = () -> {
+			selectingHUE = false;
+		};
 
-            selHSB.x = x + intW * saturation;
-            
-            setColorOffset(selHSB, curColor);
-        }
+		selHUE = new ALEUISprite();
+		selHUE.makeGraphic(Math.floor(radius * 0.6), Math.floor(intH / 6), FlxColor.BLACK);
+		ALEUIUtils.outlineBitmap(selHUE.pixels);
+		add(selHUE);
+		selHUE.y = spriteHUE.y + spriteHUE.height / 2 - selHUE.height / 2;
+		selHUE.offset.x = selHUE.width / 2;
 
-        return curColor;
-    }
+		setColor(color ?? FlxColor.WHITE);
+	}
 
-    public var hue:Float = 1;
+	public var brightness:Float = 1;
+	public var saturation:Float = 1;
+	public var hue:Float = 0;
 
-    public var brigthness:Float = 1;
+	public var curColor(get, never):Null<FlxColor>;
 
-    public var saturation:Float = 1;
+	function get_curColor():Null<FlxColor>
+		return FlxColor.fromHSB(hue, saturation, brightness);
 
-    public var intW:Int = 0;
-    public var intH:Int = 0;
+	var lastCol:Null<FlxColor>;
 
-    public var rStepper:ALENumericStepper;
-    public var gStepper:ALENumericStepper;
-    public var bStepper:ALENumericStepper;
+	function setColor(value:Null<FlxColor>):Null<FlxColor>
+	{
+		var hsb = rgbToHSB(value >> 16 & 0xFF, value >> 8 & 0xFF, value & 0xFF);
 
-    public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float)
-    {
-        super(x, y);
+		hue = hsb.h;
+		brightness = hsb.b;
+		saturation = hsb.s;
 
-        intW = Math.floor(w ?? 150);
-        intH = Math.floor(h ?? 150);
+		selHUE.x = spriteHUE.x + hue / 360 * spriteHUE.width;
 
-        spriteHSB = new FlxSprite().makeGraphic(intW, intH, FlxColor.BLACK);
-        add(spriteHSB);
-        ALEUIUtils.outlineBitmap(spriteHSB.pixels);
-        spriteHSB.shader = new ALERuntimeShader('shader', shaderHSB);
+		selHSB.x = spriteHSB.x + saturation * spriteHSB.width;
+		selHSB.y = spriteHSB.y + spriteHSB.height - (brightness * spriteHSB.height);
 
-        selHSB = new FlxSprite().makeGraphic(Math.floor(intH / 10), Math.floor(intH / 10), FlxColor.BLACK);
-        ALEUIUtils.outlineBitmap(selHSB.pixels);
-        add(selHSB);
-        selHSB.offset.x = selHSB.offset.y = intH / 20;
+		updateColor(UpdateColorType.HSB);
+		updateColor(UpdateColorType.HUE);
 
-        spriteHUE = new FlxSprite(0, intH * 1.1).makeGraphic(intW, Math.floor(intH / 10), FlxColor.BLACK);
-        add(spriteHUE);
-        ALEUIUtils.outlineBitmap(spriteHUE.pixels);
-        spriteHUE.shader = new ALERuntimeShader('shader', shaderHUE);
+		lastCol = curColor;
 
-        selHUE = new FlxSprite().makeGraphic(Math.floor(intW / 15), Math.floor(intH / 8), FlxColor.BLACK);
-        ALEUIUtils.outlineBitmap(selHUE.pixels);
-        add(selHUE);
-        selHUE.offset.x = intH / 30;
-        selHUE.y = spriteHUE.y + spriteHUE.height / 2 - selHUE.height / 2;
+		return curColor;
+	}
 
-        hue = 0;
-        saturation = 1;
-        brigthness = 1;
-        
-        curColor = FlxColor.fromHSB(hue, saturation, brigthness);
+	public var onChange:Void -> Void;
 
-        rStepper = new ALENumericStepper(intW * 1.2, null, null, null, 0, 255);
-        add(rStepper);
+	override function uiUpdate(elapsed:Float)
+	{
+		super.uiUpdate(elapsed);
 
-        gStepper = new ALENumericStepper(intW * 1.2, null, null, null, 0, 255);
-        add(gStepper);
+		if (selectingHSB || selectingHUE)
+		{
+			var mousePos:FlxPoint = FlxG.mouse.getViewPosition(cameras[0]);
 
-        bStepper = new ALENumericStepper(intW * 1.2, null, null, null, 0, 255);
-        add(bStepper);
+			if (selectingHSB)
+			{
+				selHSB.x = FlxMath.bound(mousePos.x, spriteHSB.x, spriteHSB.x + spriteHSB.width);
+				selHSB.y = FlxMath.bound(mousePos.y, spriteHSB.y, spriteHSB.y + spriteHSB.height);
 
-        for (index => obj in [rStepper, gStepper, bStepper])
-        {
-            obj.y = this.y + intH / 2 + (index + 1) * 55 - intH / 2 - 22.5;
+				updateColor(UpdateColorType.HSB);
+			}
 
-            var text:FlxText = new FlxText(0, 0, 0, ['Red', 'Green', 'Blue'][index], 17);
-            text.font = ALEUIUtils.font;
-            add(text);
-            text.x = obj.x;
-            text.y = obj.y - text.height - 2;
-        }
+			if (selectingHUE)
+			{
+				selHUE.x = FlxMath.bound(mousePos.x, spriteHUE.x, spriteHUE.x + spriteHUE.width);
 
-        rStepper.value = curColor >> 16 & 0xFF;
-        rStepper.callback = rgbColor;
+				updateColor(UpdateColorType.HUE);
+			}
 
-        gStepper.value = curColor >> 8 & 0xFF;
-        gStepper.callback = rgbColor;
+			if (lastCol != curColor)
+			{
+				if (onChange != null)
+					onChange();
 
-        bStepper.value = curColor & 0xFF;
-        bStepper.callback = rgbColor;
-    }
+				lastCol = curColor;
+			}
+		}
+	}
 
-    var changingHUE:Bool = false;
-    var changingHSB:Bool = false;
+	var lastColor:Null<FlxColor> = null;
 
-    override function updateUI(elapsed:Float)
-    {
-        super.updateUI(elapsed);
+	function updateColor(type:UpdateColorType)
+	{
+		switch (type)
+		{
+			case UpdateColorType.HSB:
+				saturation = (selHSB.x - spriteHSB.x) / spriteHSB.width;
+				brightness = 1 - (selHSB.y - spriteHSB.y) / spriteHSB.height;
+			case UpdateColorType.HUE:
+				hue = (selHUE.x - spriteHUE.x) / spriteHUE.width * 360;
+					
+				cast(spriteHSB.shader, ALERuntimeShader).setFloat('hue', hue);
+							
+				setColorOffset(selHUE, FlxColor.fromHSB(hue, 1, 1));
+		}
 
-        if (FlxG.mouse.justPressed)
-        {
-            if (mouseOverlaps(spriteHUE))
-                changingHUE = true;
-            else if (mouseOverlaps(spriteHSB))
-                changingHSB = true;
-        }
+		if (lastColor != curColor)
+		{
+			setColorOffset(selHSB, curColor);
 
-        if (FlxG.mouse.justReleased)
-        {
-            if (changingHUE)
-                changingHUE = false;
+			lastColor = curColor;
+		}
+	}
 
-            if (changingHSB)
-                changingHSB = false;
-        }
-
-        if (changingHSB)
-        {
-            saturation = FlxMath.bound((mousePosition.x - spriteHSB.x) / intW, 0, 1);
-
-            brigthness = FlxMath.bound(1 - (mousePosition.y - spriteHSB.y) / intH, 0, 1);
-        }
-
-        if (changingHUE)
-            hue = FlxMath.bound((mousePosition.x - spriteHUE.x) / intW * 360, 0, 360);
-
-        if (changingHSB || changingHUE)
-        {
-            curColor = FlxColor.fromHSB(hue, saturation, brigthness);
-
-            rStepper.value = curColor >> 16 & 0xFF;
-            gStepper.value = curColor >> 8 & 0xFF;
-            bStepper.value = curColor & 0xFF;
-
-            if (callback != null)
-                callback();
-        }
-    }
-
-    function setColorOffset(spr:FlxSprite, color:FlxColor)
+    function setColorOffset(spr:ALEUISprite, color:Null<FlxColor>)
     {
         spr.colorTransform.redOffset = color >> 16 & 0xFF;
         spr.colorTransform.greenOffset = color >> 8 & 0xFF;
@@ -264,22 +255,5 @@ class ALEColorPicker extends ALEUISpriteGroup
             s: s,
             b: b
         };
-    }
-
-    public function rgbColor()
-    {
-        var data:Dynamic = {
-            r: rStepper.value,
-            g: gStepper.value,
-            b: bStepper.value
-        };
-
-        var hsb = rgbToHSB(data.r, data.g, data.b);
-
-        hue = hsb.h;
-        saturation = hsb.s;
-        brigthness = hsb.b;
-
-        curColor = FlxColor.fromRGB(data.r, data.g, data.b);
     }
 }

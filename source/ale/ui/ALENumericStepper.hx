@@ -1,100 +1,104 @@
 package ale.ui;
 
-import ale.ui.ALEUISpriteGroup;
-import ale.ui.ALEUISprite;
 import ale.ui.ALEUIUtils;
+import ale.ui.ALEInputText;
 import ale.ui.ALEButton;
-
-import flixel.text.FlxText;
-import flixel.FlxBasic;
-
-import haxe.ds.StringMap;
-
-using StringTools;
+import ale.ui.ALEUISpriteGroup;
 
 class ALENumericStepper extends ALEUISpriteGroup
 {
-    public var bg:ALEUISprite;
-    public var text:FlxText;
+    public var onChange:Void -> Void;
+
+	public var bg:ALEInputText;
+
     public var plusButton:ALEButton;
     public var minusButton:ALEButton;
 
-    public var callback:Void -> Void;
-
-    public var value(default, set):Float = 0;
+    public var value(default, set):Float;
     function set_value(val:Float):Float
     {
         value = val;
 
-        text.text = Std.string(value);
+        if (value < min)
+            value = min;
+
+        if (value > max)
+            value = max;
+
+        bg.value = Std.string(value);
+        bg.curSelected = bg.value.length;
 
         return value;
     }
 
-    public function new(?x:Float, ?y:Float, ?w:Float, ?h:Float, ?min:Float, ?max:Float, ?step:Float, ?initial:Float)
+    public var max(default, set):Float;
+    function set_max(val:Float):Float
+    {
+        max = val;
+
+        value = value;
+
+        return max;
+    }
+
+    public var min(default, set):Float;
+    function set_min(val:Float):Float
+    {
+        min = val;
+
+        value = value;
+
+        return min;
+    }
+
+    public function new(?x:Float, ?y:Float, ?min:Float, ?max:Float, ?initial:Float, ?change:Float, ?w:Float, ?h:Float)
     {
         super(x, y);
 
-        var intW:Int = Math.floor(w ?? 100);
-        var intH:Int = Math.floor(h ?? 25);
+        var theWidth:Float = Math.max(80, w ?? (ALEUIUtils.OBJECT_SIZE * 3.2));
 
-        bg = new ALEUISprite();
-        bg.makeGraphic(intW - intH * 2, intH, ALEUIUtils.adjustColorBrightness(ALEUIUtils.color, -50));
-        ALEUIUtils.outlineBitmap(bg.pixels);
+        bg = new ALEInputText(0, 0, null, theWidth, h);
         add(bg);
+        bg.filter = ~/^[0-9\.\-]+$/;
+        bg.focusCallback = (isTyping) -> {
+            if (!isTyping)
+            {
+                var changeVal:Float = Std.parseFloat(bg.value);
 
-        text = new FlxText(width * 0.1, 0, 0, '0', Math.floor(Math.min(intW - intH * 2, intH) / 1.5));
-        text.font = ALEUIUtils.font;
-        text.y = bg.height / 2 - text.height / 2;
-        add(text);
+                if (!Math.isNaN(changeVal))
+                    value = changeVal;
+                
+                if (onChange != null)
+                    onChange();
+            }
+        };
 
-        step ??= 1;
-        min ??= 0;
-        max ??= 999;
-        
-        plusButton = new ALEButton(bg.width + intH, 0, intH, intH, true, '+');
+        change ??= 1;
+
+        plusButton = new ALEButton(theWidth, 0, '+', ALEUIUtils.OBJECT_SIZE, h);
         add(plusButton);
         plusButton.releaseCallback = () -> {
-            value += step;
+            value = value + change;
 
-            if (value < min)
-                value = max;
-
-            if (value > max)
-                value = min;
-
-            value = formatValue(value, step);
-
-            if (callback != null)
-                callback();
+            if (onChange != null)
+                onChange();
         };
+        plusButton.changeCursorSkin = false;
 
-        minusButton = new ALEButton(bg.width, 0, intH, intH, true, '-');
+        minusButton = new ALEButton(theWidth + ALEUIUtils.OBJECT_SIZE, 0, '-', ALEUIUtils.OBJECT_SIZE, h);
         add(minusButton);
         minusButton.releaseCallback = () -> {
-            value -= step;
+            value = value - change;
 
-            if (value < min)
-                value = max;
-
-            if (value > max)
-                value = min;
-
-            value = formatValue(value, step);
-
-            if (callback != null)
-                callback();
+            if (onChange != null)
+                onChange();
         };
+        minusButton.changeCursorSkin = false;
 
         value = initial ?? 0;
-    }
 
-    function formatValue(v:Float, step:Float):Float
-    {
-        var decimals:String = Std.string(step).split('.')[1] ?? '';
+        this.max = max ?? 100;
 
-        var pow = Math.pow(10, decimals.length);   
-
-        return Math.round(v * pow) / pow;
+        this.min = min ?? 0;
     }
 }

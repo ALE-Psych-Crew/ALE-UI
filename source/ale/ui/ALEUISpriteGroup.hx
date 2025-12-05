@@ -1,42 +1,34 @@
 package ale.ui;
 
-import flixel.FlxBasic;
 import flixel.group.FlxSpriteGroup;
-import flixel.math.FlxPoint;
 
 class ALEUISpriteGroup extends FlxSpriteGroup implements ALEUIObject
 {
     public var allowUpdate:Bool = true;
-    public var allowDraw:Bool = true;
-
-    public var mousePosition:FlxPoint = FlxPoint.get();
-
-    public function mouseOverlaps(obj:FlxBasic):Bool
-        return FlxG.mouse.overlaps(obj, cameras[0]);
 
     override function update(elapsed:Float)
     {
         if (!allowUpdate)
             return;
 
-        super.update(elapsed);
+        uiUpdate(elapsed);
 
-        updateUI(elapsed);
-        
-        mousePosition = FlxG.mouse.getScreenPosition(cameras[0]);
+        super.update(elapsed);
     }
 
-    public function updateUI(elapsed:Float) {}
+    public function uiUpdate(elapsed:Float) {}
+
+    public var allowDraw:Bool = true;
 
     override function draw()
     {
         if (!allowDraw)
             return;
 
-        super.draw();
+        uiDraw();
 
-        drawUI();
+        super.draw();
     }
 
-    public function drawUI() {}
+    public function uiDraw() {}
 }
