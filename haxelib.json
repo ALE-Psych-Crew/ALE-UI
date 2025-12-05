@@ -1,11 +1,19 @@
 {
     "name": "ale-ui",
-    "url" : "https://github.com/ALE-Engine-Crew/ALE-UI",
+    "url": "https://github.com/ALE-Psych-Crew/ALE-UI",
     "license": "MIT",
-    "tags": ["flixel", "addons", "ui", "ale", "ale-engine"],
-    "description": "Addons Library for Interface Making (Designed for ALE Engine)",
-    "version": "1.0.0",
+    "tags": [
+        "flixel",
+        "addons",
+        "ui",
+        "ale",
+        "ale-psych"
+    ],
+    "description": "Addons Library for Interface Making (Designed for ALE Psych)",
+    "version": "1.0.1",
     "classPath": "source/",
     "releasenote": "",
-    "contributors": ["AlejoGDOfficial"]
+    "contributors": [
+        "AlejoGDOfficial"
+    ]
 }
