@@ -65,11 +65,13 @@ class ALENumericStepper extends ALEUISpriteGroup
             {
                 var changeVal:Float = Std.parseFloat(bg.value);
 
-                if (!Math.isNaN(changeVal))
+                if (!Math.isNaN(changeVal) && changeVal != value)
+                {
                     value = changeVal;
                 
-                if (onChange != null)
-                    onChange();
+                    if (onChange != null)
+                        onChange();
+                }
             }
         };
 
