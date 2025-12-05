@@ -10,7 +10,7 @@
         "ale-psych"
     ],
     "description": "Addons Library for Interface Making (Designed for ALE Psych)",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "classPath": "source/",
     "releasenote": "",
     "contributors": [
