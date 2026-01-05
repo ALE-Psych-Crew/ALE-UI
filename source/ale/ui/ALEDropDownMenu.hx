@@ -71,6 +71,8 @@ class ALEDropDownMenu extends ALEUISpriteGroup
 		return options;
 	}
 
+	public var selectionCallback:String -> Void;
+
 	public function new(?x:Float, ?y:Float, ?opts:Array<String>, ?w:Float, ?h:Float)
 	{
 		super(x, y);
@@ -143,6 +145,9 @@ class ALEDropDownMenu extends ALEUISpriteGroup
 			bg.curSelected = bg.value.length;
 
 			open = false;
+
+			if (selectionCallback != null)
+				selectionCallback(value);
 		};
 
 		buttons.add(but);
