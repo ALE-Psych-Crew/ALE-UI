@@ -51,10 +51,15 @@ class ALEInputText extends ALEMouseSpriteGroup
 	public var isTyping(default, set):Bool;
 	function set_isTyping(val:Bool):Bool
 	{
+		if (val == isTyping)
+			return isTyping;
+
         if (isTyping != val)
             ALEUIUtils.usedInputs = ALEUIUtils.usedInputs + (val ? 1 : -1);
 
 		isTyping = val;
+
+		FlxG.stage.window.textInputEnabled = isTyping;
 
 		cursor.visible = isTyping;
 
@@ -143,6 +148,8 @@ class ALEInputText extends ALEMouseSpriteGroup
 		updateSearch();
 		
         FlxG.stage.addEventListener('keyDown', onKeyDown, false, 1);
+
+		FlxG.stage.window.onTextInput.add(onTextInput);
 	}
 
 	override function uiUpdate(elapsed:Float)
@@ -176,6 +183,8 @@ class ALEInputText extends ALEMouseSpriteGroup
     override function destroy()
     {
         FlxG.stage.removeEventListener('keyDown', onKeyDown, false);
+		
+		FlxG.stage.window.onTextInput.remove(onTextInput);
 
         isTyping = false;
 
@@ -197,8 +206,6 @@ class ALEInputText extends ALEMouseSpriteGroup
 		var punctReg:EReg = ~/[.,;:¡!¿?"'()\[\]{}\-—…]/;
 		var alphaNumericReg:EReg = ~/[\w]/;
 		var spaceReg:EReg = ~/[\s]/;
-
-		var printReg:EReg = ~/[\x20-\x7E]/;
 
 		var regs:Array<EReg> = [punctReg, spaceReg, alphaNumericReg];
 
@@ -249,26 +256,24 @@ class ALEInputText extends ALEMouseSpriteGroup
             default:
 				if (e.ctrlKey && key == FlxKey.C)
 					Clipboard.text = value;
-				else if (e.ctrlKey && key == FlxKey.V)
-					toAdd = Clipboard.text;
-				else
-					toAdd = String.fromCharCode(e.charCode);
+
+				if (e.ctrlKey && key == FlxKey.V)
+					onTextInput(Clipboard.text);
         }
-
-		if (toAdd != null && printReg.match(toAdd))
-		{
-			if (filter != null)
-				if (!filter.match(toAdd))
-					return;
-
-			value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
-
-			if (typeCallback != null)
-				typeCallback(toAdd);
-
-			curSelected = curSelected + toAdd.length;
-		}
     }
+
+	function onTextInput(toAdd:String)
+	{
+		if (!isTyping)
+			return;
+
+		value = value.substring(0, curSelected) + toAdd + value.substring(curSelected);
+
+		if (typeCallback != null)
+			typeCallback(toAdd);
+
+		curSelected = curSelected + toAdd.length;
+	}
 
 	function updateSearch()
 	{
