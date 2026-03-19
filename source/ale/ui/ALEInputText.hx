@@ -19,14 +19,14 @@ typedef CheckPosition = {
 	position:Int
 }
 
-class ALEInputText extends ALEMouseSpriteGroup
+class ALEInputText extends ALEUISpriteGroup
 {
 	var theWidth:Int;
 	var theHeight:Int;
 
 	var labelX:Float;
 
-	public var bg:ALEUISprite;
+	public var bg:ALEMouseSprite;
 
 	public var searchLabel:FlxText;
 	public var label:FlxText;
@@ -116,9 +116,10 @@ class ALEInputText extends ALEMouseSpriteGroup
 
 		labelX = Math.floor(Math.max(1, theWidth / 36));
 
-		bg = new ALEUISprite();
+		bg = new ALEMouseSprite();
 		bg.pixels = ALEUIUtils.uiBitmap(theWidth, theHeight, false, -25);
 		add(bg);
+		bg.onOverlapChange = (isOver) -> Mouse.cursor = isOver ? 'ibeam' : 'arrow';
 
 		searchLabel = new FlxText(labelX, 0, 0, '', Math.floor(Math.min(theWidth, theHeight) / 1.5));
 		searchLabel.alpha = 0.5;
@@ -168,7 +169,7 @@ class ALEInputText extends ALEMouseSpriteGroup
 
 		if (FlxG.mouse.justPressed)
 		{
-			if (overlaped)
+			if (bg.overlaped)
 			{
 				if (!isTyping)
 					isTyping = true;
@@ -190,13 +191,6 @@ class ALEInputText extends ALEMouseSpriteGroup
 
         super.destroy();
     }
-
-	override function overlapCallbackHandler(isOver:Bool)
-	{
-		Mouse.cursor = isOver ? 'ibeam' : 'arrow';
-
-		super.overlapCallbackHandler(isOver);
-	}
 
     function onKeyDown(e:KeyboardEvent):Void
     {
