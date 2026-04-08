@@ -1,8 +1,8 @@
 package ale.ui;
 
-import flixel.FlxSprite;
+import flixel.group.FlxSpriteGroup;
 
-class ALEUISprite extends FlxSprite implements ALEUIObject
+class UISpriteGroup extends FlxSpriteGroup implements UIObject
 {
     public var allowUpdate:Bool = true;
 

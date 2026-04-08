@@ -2,16 +2,16 @@ package ale.ui;
 
 import flixel.FlxSprite;
 
-import ale.ui.ALEUISpriteGroup;
-import ale.ui.ALEUIUtils;
-import ale.ui.ALEButton;
-import ale.ui.ALETab;
+import ale.ui.UISpriteGroup;
+import ale.ui.UIUtils;
+import ale.ui.Button;
+import ale.ui.Tab;
 
 import haxe.ds.StringMap;
 
-class ALEMultiTab extends ALETab
+class MultiTab extends Tab
 {
-    public var groups:StringMap<ALEUISpriteGroup> = new StringMap<ALEUISpriteGroup>();
+    public var groups:StringMap<UISpriteGroup> = new StringMap<UISpriteGroup>();
 
     public var curGroup(default, set):String;
     function set_curGroup(val:String):String
@@ -23,7 +23,7 @@ class ALEMultiTab extends ALETab
 
         for (group in groups.keys())
         {
-            var grp:ALEUISpriteGroup = groups.get(group);
+            var grp:UISpriteGroup = groups.get(group);
 
             grp.allowUpdate = grp.allowDraw = group == curGroup;
         }
@@ -45,14 +45,14 @@ class ALEMultiTab extends ALETab
         {
             var wid:Float = w / cleanGroups.length;
 
-            var button:ALEButton = new ALEButton(wid * index, -ALEUIUtils.OBJECT_SIZE, group, wid);
+            var button:Button = new Button(wid * index, -UIUtils.OBJECT_SIZE, group, wid);
             add(button);
             button.changeCursorSkin = false;
             button.releaseCallback = () -> {
                 curGroup = group;
             };
 
-            this.groups.set(group, new ALEUISpriteGroup());
+            this.groups.set(group, new UISpriteGroup());
         }
         
         for (group in this.groups)

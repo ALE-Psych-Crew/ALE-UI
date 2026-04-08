@@ -1,16 +1,16 @@
 package ale.ui;
 
-import ale.ui.ALEMouseSprite;
-import ale.ui.ALEUISpriteGroup;
-import ale.ui.ALEUISprite;
-import ale.ui.ALEUIUtils;
+import ale.ui.MouseSprite;
+import ale.ui.UISpriteGroup;
+import ale.ui.UISprite;
+import ale.ui.UIUtils;
 
 import flixel.math.FlxPoint;
 import flixel.util.FlxSpriteUtil;
 
 import ale.ui.UpdateColorType;
 
-class ALEColorPicker extends ALEUISpriteGroup
+class ColorPicker extends UISpriteGroup
 {
     var shaderHSB:String = '
         #pragma header
@@ -40,8 +40,8 @@ class ALEColorPicker extends ALEUISpriteGroup
     ';
 
 	var selectingHSB:Bool = false;
-	public var spriteHSB:ALEMouseSprite;
-	public var selHSB:ALEUISprite;
+	public var spriteHSB:MouseSprite;
+	public var selHSB:UISprite;
 
     public var shaderHUE:String = '
         #pragma header
@@ -69,21 +69,21 @@ class ALEColorPicker extends ALEUISpriteGroup
     ';
 
 	var selectingHUE:Bool = false;
-	public var spriteHUE:ALEMouseSprite;
-	public var selHUE:ALEUISprite;
+	public var spriteHUE:MouseSprite;
+	public var selHUE:UISprite;
 
 	public function new(?x:Float, ?y:Float, ?color:Null<FlxColor>, ?w:Float, ?h:Float)
 	{
 		super(x, y);
 
-		var intW:Int = Math.floor(w ?? ALEUIUtils.OBJECT_SIZE * 6);
-		var intH:Int = Math.floor(h ?? ALEUIUtils.OBJECT_SIZE * 6);
+		var intW:Int = Math.floor(w ?? UIUtils.OBJECT_SIZE * 6);
+		var intH:Int = Math.floor(h ?? UIUtils.OBJECT_SIZE * 6);
 
-		spriteHSB = new ALEMouseSprite();
+		spriteHSB = new MouseSprite();
 		spriteHSB.makeGraphic(intW, intH, FlxColor.BLACK);
 		add(spriteHSB);
-		ALEUIUtils.outlineBitmap(spriteHSB.pixels);
-		spriteHSB.shader = new ALERuntimeShader('shaderHSB', shaderHSB);
+		UIUtils.outlineBitmap(spriteHSB.pixels);
+		spriteHSB.shader = new RuntimeShader('shaderHSB', shaderHSB);
 		spriteHSB.pressCallback = () -> {
 			selectingHSB = true;
 		};
@@ -93,18 +93,18 @@ class ALEColorPicker extends ALEUISpriteGroup
 
 		var radius:Int = Math.floor(Math.max(intW, intH) / 15);
 
-		selHSB = new ALEUISprite();
+		selHSB = new UISprite();
 		selHSB.makeGraphic(radius, radius, FlxColor.BLACK);
-		ALEUIUtils.outlineBitmap(selHSB.pixels);
+		UIUtils.outlineBitmap(selHSB.pixels);
 		add(selHSB);
 		selHSB.offset.x = selHSB.offset.y = radius / 2;
 		selHSB.angle = 45;
 
-		spriteHUE = new ALEMouseSprite(0, intH * 1.1);
+		spriteHUE = new MouseSprite(0, intH * 1.1);
 		spriteHUE.makeGraphic(intW, Math.floor(intH / 7.5), FlxColor.BLACK);
-		ALEUIUtils.outlineBitmap(spriteHUE.pixels);
+		UIUtils.outlineBitmap(spriteHUE.pixels);
 		add(spriteHUE);
-		spriteHUE.shader = new ALERuntimeShader('shaderHUE', shaderHUE);
+		spriteHUE.shader = new RuntimeShader('shaderHUE', shaderHUE);
 		spriteHUE.pressCallback = () -> {
 			selectingHUE = true;
 		};
@@ -112,9 +112,9 @@ class ALEColorPicker extends ALEUISpriteGroup
 			selectingHUE = false;
 		};
 
-		selHUE = new ALEUISprite();
+		selHUE = new UISprite();
 		selHUE.makeGraphic(Math.floor(radius * 0.6), Math.floor(intH / 6), FlxColor.BLACK);
-		ALEUIUtils.outlineBitmap(selHUE.pixels);
+		UIUtils.outlineBitmap(selHUE.pixels);
 		add(selHUE);
 		selHUE.y = spriteHUE.y + spriteHUE.height / 2 - selHUE.height / 2;
 		selHUE.offset.x = selHUE.width / 2;
@@ -201,7 +201,7 @@ class ALEColorPicker extends ALEUISpriteGroup
 			case UpdateColorType.HUE:
 				hue = (selHUE.x - spriteHUE.x) / spriteHUE.width * 360;
 					
-				cast(spriteHSB.shader, ALERuntimeShader).setFloat('hue', hue);
+				cast(spriteHSB.shader, RuntimeShader).setFloat('hue', hue);
 							
 				setColorOffset(selHUE, FlxColor.fromHSB(hue, 1, 1));
 		}
@@ -214,7 +214,7 @@ class ALEColorPicker extends ALEUISpriteGroup
 		}
 	}
 
-    function setColorOffset(spr:ALEUISprite, color:Null<FlxColor>)
+    function setColorOffset(spr:UISprite, color:Null<FlxColor>)
     {
         spr.colorTransform.redOffset = color >> 16 & 0xFF;
         spr.colorTransform.greenOffset = color >> 8 & 0xFF;

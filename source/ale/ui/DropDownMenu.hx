@@ -1,20 +1,20 @@
 package ale.ui;
 
-import ale.ui.ALEUIUtils;
+import ale.ui.UIUtils;
 
-import ale.ui.ALEButton;
-import ale.ui.ALEInputText;
-import ale.ui.ALEUISpriteGroup;
+import ale.ui.Button;
+import ale.ui.InputText;
+import ale.ui.UISpriteGroup;
 
 import flixel.math.FlxRect;
 
-class ALEDropDownMenu extends ALEUISpriteGroup
+class DropDownMenu extends UISpriteGroup
 {
-	public var bg:ALEInputText;
+	public var bg:InputText;
 
-	public var openButton:ALEButton;
+	public var openButton:Button;
 
-	public var buttons:ALEUISpriteGroup;
+	public var buttons:UISpriteGroup;
 
 	public var value(default, set):String;
 	function set_value(val:String):String
@@ -77,23 +77,23 @@ class ALEDropDownMenu extends ALEUISpriteGroup
 	{
 		super(x, y);
 
-		theWidth = w ?? ALEUIUtils.OBJECT_SIZE * 5;
-		theHeight = h ?? ALEUIUtils.OBJECT_SIZE;
+		theWidth = w ?? UIUtils.OBJECT_SIZE * 5;
+		theHeight = h ?? UIUtils.OBJECT_SIZE;
 
-		openButton = new ALEButton(theWidth, 0, '+', theHeight, theHeight);
+		openButton = new Button(theWidth, 0, '+', theHeight, theHeight);
 		openButton.changeCursorSkin = false;
 		openButton.releaseCallback = () -> {
 			open = !open;
 		};
 
-		buttons = new ALEUISpriteGroup();
+		buttons = new UISpriteGroup();
 		buttons.y = theHeight;
 
 		options = opts;
 
 		open = false;
 
-		bg = new ALEInputText(0, 0, opts, theWidth, theHeight);
+		bg = new InputText(0, 0, opts, theWidth, theHeight);
 		bg.value = getFirstOption();
 		bg.curSelected = bg.value.length;
 		bg.focusCallback = (isFocused) -> {
@@ -124,7 +124,7 @@ class ALEDropDownMenu extends ALEUISpriteGroup
 
 			buttonsY = FlxMath.bound(buttonsY, -theHeight * (buttons.members.length - 1), 0);
 
-			buttons.y = ALEUIUtils.fpsLerp(buttons.y, this.y + buttonsY + theHeight, 0.3);
+			buttons.y = UIUtils.fpsLerp(buttons.y, this.y + buttonsY + theHeight, 0.3);
 
 			buttons.clipRect = new FlxRect(0, this.y - buttons.y + theHeight, buttons.width, this.y + buttons.height);
 		}
@@ -135,7 +135,7 @@ class ALEDropDownMenu extends ALEUISpriteGroup
 
 	public function addOption(option:String)
 	{
-		var but:ALEButton = new ALEButton(0, 0, option, theWidth, theHeight);
+		var but:Button = new Button(0, 0, option, theWidth, theHeight);
 		but.y = theHeight * buttons.members.length;
 		but.changeCursorSkin = false;
 		but.releaseCallback = () -> {
@@ -166,7 +166,7 @@ class ALEDropDownMenu extends ALEUISpriteGroup
 
 		for (but in buttons)
 		{
-			if (cast(but, ALEButton).label.text == option)
+			if (cast(but, Button).label.text == option)
 			{
 				buttons.remove(but, true);
 

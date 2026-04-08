@@ -1,7 +1,7 @@
 package ale.ui;
 
-import ale.ui.ALEMouseSpriteGroup;
-import ale.ui.ALEUIUtils;
+import ale.ui.MouseSpriteGroup;
+import ale.ui.UIUtils;
 
 import flixel.FlxSprite;
 import flixel.text.FlxText;
@@ -9,7 +9,7 @@ import flixel.addons.display.shapes.FlxShapeCircle;
 
 import openfl.ui.Mouse;
 
-class ALECircleButton extends ALEMouseSpriteGroup
+class CircleButton extends MouseSpriteGroup
 {
 	public var bg:FlxSprite;
 	public var fill:FlxSprite;
@@ -32,16 +32,16 @@ class ALECircleButton extends ALEMouseSpriteGroup
 	{
 		super(x, y);
 
-		size ??= ALEUIUtils.OBJECT_SIZE;
+		size ??= UIUtils.OBJECT_SIZE;
 
 		var intSize:Int = Math.floor(size / 2);
 
-		bg = new FlxShapeCircle(0, 0, intSize, {thickness: 2, color: ALEUIUtils.OUTLINE_COLOR}, ALEUIUtils.COLOR);
+		bg = new FlxShapeCircle(0, 0, intSize, {thickness: 2, color: UIUtils.OUTLINE_COLOR}, UIUtils.COLOR);
 		add(bg);
 
 		var fillSize:Int = Math.floor(intSize * 0.55);
 
-		fill = new FlxShapeCircle(bg.width / 2 - fillSize, bg.height / 2 - fillSize, Math.floor(fillSize), {color: 0x0}, ALEUIUtils.OUTLINE_COLOR);
+		fill = new FlxShapeCircle(bg.width / 2 - fillSize, bg.height / 2 - fillSize, Math.floor(fillSize), {color: 0x0}, UIUtils.OUTLINE_COLOR);
 		add(fill);
 
 		mask = new FlxShapeCircle(0, 0, intSize, {thickness: 2, color: FlxColor.WHITE}, FlxColor.WHITE);
@@ -51,7 +51,7 @@ class ALECircleButton extends ALEMouseSpriteGroup
 		label = new FlxText(intSize * 2.4, 0, 0, lbl ?? 'Button', Math.floor(intSize * 1.5));
 		add(label);
 		label.y = this.y + intSize - label.height / 2;
-		label.font = ALEUIUtils.FONT;
+		label.font = UIUtils.FONT;
 
 		value = defValue ?? false;
 	}

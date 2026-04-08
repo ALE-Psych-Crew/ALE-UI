@@ -1,18 +1,18 @@
 package ale.ui;
 
-import ale.ui.ALEUIUtils;
-import ale.ui.ALEInputText;
-import ale.ui.ALEButton;
-import ale.ui.ALEUISpriteGroup;
+import ale.ui.UIUtils;
+import ale.ui.InputText;
+import ale.ui.Button;
+import ale.ui.UISpriteGroup;
 
-class ALENumericStepper extends ALEUISpriteGroup
+class NumericStepper extends UISpriteGroup
 {
     public var onChange:Void -> Void;
 
-	public var bg:ALEInputText;
+	public var bg:InputText;
 
-    public var plusButton:ALEButton;
-    public var minusButton:ALEButton;
+    public var plusButton:Button;
+    public var minusButton:Button;
 
     public var value(default, set):Float;
     function set_value(val:Float):Float
@@ -55,9 +55,9 @@ class ALENumericStepper extends ALEUISpriteGroup
     {
         super(x, y);
 
-        var theWidth:Float = Math.max(80, w ?? (ALEUIUtils.OBJECT_SIZE * 3.2));
+        var theWidth:Float = Math.max(80, w ?? (UIUtils.OBJECT_SIZE * 3.2));
 
-        bg = new ALEInputText(0, 0, null, theWidth, h);
+        bg = new InputText(0, 0, null, theWidth, h);
         add(bg);
         bg.filter = ~/^[0-9\.\-]+$/;
         bg.focusCallback = (isTyping) -> {
@@ -77,7 +77,7 @@ class ALENumericStepper extends ALEUISpriteGroup
 
         change ??= 1;
 
-        plusButton = new ALEButton(theWidth, 0, '+', ALEUIUtils.OBJECT_SIZE, h);
+        plusButton = new Button(theWidth, 0, '+', UIUtils.OBJECT_SIZE, h);
         add(plusButton);
         plusButton.releaseCallback = () -> {
             value = value + change;
@@ -87,7 +87,7 @@ class ALENumericStepper extends ALEUISpriteGroup
         };
         plusButton.changeCursorSkin = false;
 
-        minusButton = new ALEButton(theWidth + ALEUIUtils.OBJECT_SIZE, 0, '-', ALEUIUtils.OBJECT_SIZE, h);
+        minusButton = new Button(theWidth + UIUtils.OBJECT_SIZE, 0, '-', UIUtils.OBJECT_SIZE, h);
         add(minusButton);
         minusButton.releaseCallback = () -> {
             value = value - change;

@@ -1,6 +1,6 @@
 package ale.ui;
 
-interface ALEMouseObject
+interface MouseObject
 {
     public var overlaped:Bool;
 

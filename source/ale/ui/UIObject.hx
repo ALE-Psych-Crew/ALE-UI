@@ -1,6 +1,6 @@
 package ale.ui;
 
-interface ALEUIObject
+interface UIObject
 {
     public var allowUpdate:Bool;
 

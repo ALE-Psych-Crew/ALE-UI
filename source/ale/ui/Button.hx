@@ -1,17 +1,17 @@
 package ale.ui;
 
-import ale.ui.ALEMouseSpriteGroup;
-import ale.ui.ALEUIUtils;
+import ale.ui.MouseSpriteGroup;
+import ale.ui.UIUtils;
 
 import flixel.text.FlxText;
 
 import openfl.ui.Mouse;
 
-class ALEButton extends ALEMouseSpriteGroup
+class Button extends MouseSpriteGroup
 {
-	public var bg:ALEUISprite;
+	public var bg:UISprite;
 	public var label:FlxText;
-	public var mask:ALEUISprite;
+	public var mask:UISprite;
 
 	public var changeCursorSkin:Bool = true;
 
@@ -19,24 +19,24 @@ class ALEButton extends ALEMouseSpriteGroup
 	{
 		super(x, y);
 
-		var intW:Int = Math.floor(w ?? (ALEUIUtils.OBJECT_SIZE * 5));
-		var intH:Int = Math.floor(h ?? ALEUIUtils.OBJECT_SIZE);
+		var intW:Int = Math.floor(w ?? (UIUtils.OBJECT_SIZE * 5));
+		var intH:Int = Math.floor(h ?? UIUtils.OBJECT_SIZE);
 
-		bg = new ALEUISprite();
-		bg.pixels = ALEUIUtils.uiBitmap(intW, intH, shadowed);
+		bg = new UISprite();
+		bg.pixels = UIUtils.uiBitmap(intW, intH, shadowed);
 		bg.updateHitbox();
 		add(bg);
 
 		label = new FlxText(0, 0, 0, lab ?? 'Button', Math.floor(Math.min(intW, intH) / 1.5));
 		add(label);
-		label.font = ALEUIUtils.FONT;
+		label.font = UIUtils.FONT;
 		label.alignment = 'center';
 		label.x = bg.x + bg.width / 2 - label.width / 2;
 		label.y = bg.y + bg.height / 2 - label.height / 2;
 
 		if (allowMask ?? true)
 		{
-			mask = new ALEUISprite();
+			mask = new UISprite();
 			mask.makeGraphic(intW, intH, FlxColor.WHITE);
 			add(mask);
 			mask.alpha = 0;

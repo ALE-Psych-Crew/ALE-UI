@@ -5,9 +5,9 @@ import openfl.geom.Rectangle;
 
 import flixel.util.FlxColor;
 
-class ALEUIUtils
+class UIUtils
 {
-    @:allow(ale.ui.ALEInputText)
+    @:allow(ale.ui.InputText)
     private static var usedInputs(default, set):Int = 0;
     static function set_usedInputs(val:Int):Int
     {

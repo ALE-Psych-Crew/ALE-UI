@@ -1,8 +1,8 @@
 package ale.ui;
 
-import ale.ui.ALEUISprite;
+import ale.ui.UISpriteGroup;
 
-class ALEMouseSprite extends ALEUISprite implements ALEMouseObject
+class MouseSpriteGroup extends UISpriteGroup implements MouseObject
 {
 	public var overlaped:Bool = false;
 

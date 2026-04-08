@@ -1,16 +1,16 @@
 package ale.ui;
 
-import ale.ui.ALEUIUtils;
-import ale.ui.ALEButton;
-import ale.ui.ALEUISpriteGroup;
+import ale.ui.UIUtils;
+import ale.ui.Button;
+import ale.ui.UISpriteGroup;
 
 import flixel.math.FlxPoint;
 
-class ALETab extends ALEUISpriteGroup
+class Tab extends UISpriteGroup
 {
-    public var border:ALEButton;
+    public var border:Button;
 
-    public var bg:ALEUISprite;
+    public var bg:UISprite;
 
     public var draggable(default, set):Bool;
     function set_draggable(val:Bool):Bool
@@ -36,8 +36,8 @@ class ALETab extends ALEUISpriteGroup
 
             mouseOffset = FlxPoint.get(mousePos.x - this.x, mousePos.y - this.y);
         } else if (positionSafety) {
-            x = FlxMath.bound(x, -width + ALEUIUtils.OBJECT_SIZE, FlxG.width - ALEUIUtils.OBJECT_SIZE);
-            y = FlxMath.bound(y, ALEUIUtils.OBJECT_SIZE, FlxG.height);
+            x = FlxMath.bound(x, -width + UIUtils.OBJECT_SIZE, FlxG.width - UIUtils.OBJECT_SIZE);
+            y = FlxMath.bound(y, UIUtils.OBJECT_SIZE, FlxG.height);
         }
 
         return dragging;
@@ -49,11 +49,11 @@ class ALETab extends ALEUISpriteGroup
     {
         super(x, y);
 
-        w ??= (ALEUIUtils.OBJECT_SIZE * 10);
-        h ??= (ALEUIUtils.OBJECT_SIZE * 10);
+        w ??= (UIUtils.OBJECT_SIZE * 10);
+        h ??= (UIUtils.OBJECT_SIZE * 10);
 
-        bg = new ALEUISprite();
-		bg.pixels = ALEUIUtils.uiBitmap(Math.floor(w), Math.floor(h), false, -75);
+        bg = new UISprite();
+		bg.pixels = UIUtils.uiBitmap(Math.floor(w), Math.floor(h), false, -75);
 		bg.updateHitbox();
 		add(bg);
 
@@ -65,7 +65,7 @@ class ALETab extends ALEUISpriteGroup
         
         if (!borderless)
         {
-            border = new ALEButton(0, 0, title ?? 'Title', w, null, null, false);
+            border = new Button(0, 0, title ?? 'Title', w, null, null, false);
             border.label.alignment = 'left';
             border.label.x = 10;
             border.changeCursorSkin = false;

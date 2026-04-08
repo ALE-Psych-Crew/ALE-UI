@@ -9,8 +9,8 @@ import lime.system.Clipboard;
 import openfl.events.KeyboardEvent;
 import openfl.ui.Mouse;
 
-import ale.ui.ALEMouseSpriteGroup;
-import ale.ui.ALEUIUtils;
+import ale.ui.MouseSpriteGroup;
+import ale.ui.UIUtils;
 
 using StringTools;
 
@@ -19,19 +19,19 @@ typedef CheckPosition = {
 	position:Int
 }
 
-class ALEInputText extends ALEUISpriteGroup
+class InputText extends UISpriteGroup
 {
 	var theWidth:Int;
 	var theHeight:Int;
 
 	var labelX:Float;
 
-	public var bg:ALEMouseSprite;
+	public var bg:MouseSprite;
 
 	public var searchLabel:FlxText;
 	public var label:FlxText;
 
-	public var cursor:ALEUISprite;
+	public var cursor:UISprite;
 	var cursorTimer:Float = 0;
 
 	public var curSelected(default, set):Int;
@@ -55,7 +55,7 @@ class ALEInputText extends ALEUISpriteGroup
 			return isTyping;
 
         if (isTyping != val)
-            ALEUIUtils.usedInputs = ALEUIUtils.usedInputs + (val ? 1 : -1);
+            UIUtils.usedInputs = UIUtils.usedInputs + (val ? 1 : -1);
 
 		isTyping = val;
 
@@ -111,28 +111,28 @@ class ALEInputText extends ALEUISpriteGroup
 	{
 		super(x, y);
 
-		theWidth = Math.floor(width ?? (ALEUIUtils.OBJECT_SIZE * 6));
-		theHeight = Math.floor(height ?? ALEUIUtils.OBJECT_SIZE);
+		theWidth = Math.floor(width ?? (UIUtils.OBJECT_SIZE * 6));
+		theHeight = Math.floor(height ?? UIUtils.OBJECT_SIZE);
 
 		labelX = Math.floor(Math.max(1, theWidth / 36));
 
-		bg = new ALEMouseSprite();
-		bg.pixels = ALEUIUtils.uiBitmap(theWidth, theHeight, false, -25);
+		bg = new MouseSprite();
+		bg.pixels = UIUtils.uiBitmap(theWidth, theHeight, false, -25);
 		add(bg);
 		bg.onOverlapChange = (isOver) -> Mouse.cursor = isOver ? 'ibeam' : 'arrow';
 
 		searchLabel = new FlxText(labelX, 0, 0, '', Math.floor(Math.min(theWidth, theHeight) / 1.5));
 		searchLabel.alpha = 0.5;
-		searchLabel.font = ALEUIUtils.FONT;
+		searchLabel.font = UIUtils.FONT;
 		searchLabel.y = theHeight / 2 - searchLabel.height / 2;
 		add(searchLabel);
 
 		label = new FlxText(labelX, 0, 0, '', Math.floor(Math.min(theWidth, theHeight) / 1.5));
-		label.font = ALEUIUtils.FONT;
+		label.font = UIUtils.FONT;
 		label.y = theHeight / 2 - label.height / 2;
 		add(label);
 
-		cursor = new ALEUISprite(labelX);
+		cursor = new UISprite(labelX);
 		cursor.makeGraphic(Math.floor(theWidth * 0.0125), Math.floor(theHeight * 0.65));
 		cursor.y = theHeight / 2 - cursor.height / 2;
 		add(cursor);
